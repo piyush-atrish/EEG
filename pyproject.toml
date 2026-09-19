@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eegpipe"
+version = "0.1.0"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+markers = [
+    "slow: marks tests as slow",
+    "integration: full chain on synthetic data",
+    "needs_data: requires real CHB-MIT data"
+]
