@@ -1,5 +1,7 @@
 import pytest
-from eegpipe.config import load_config, channel_slug
+
+from eegpipe.config import channel_slug, load_config
+
 
 def test_load_config_validates_channels():
     # Pass an override with only 1 channel to trigger the validation error

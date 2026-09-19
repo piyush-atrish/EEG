@@ -1,14 +1,15 @@
 import argparse
-import pandas as pd
 from pathlib import Path
 
+import pandas as pd
+
 from eegpipe.config import load_config
-from eegpipe.io.download import download_metadata, download_edfs
 from eegpipe.io.annotations import build_annotations
 from eegpipe.io.cohort import select_cohort
+from eegpipe.io.download import download_edfs, download_metadata
 from eegpipe.io.loader import read_edf_header
-from eegpipe.utils.paths import file_index_csv, annotations_csv
 from eegpipe.utils.logging_utils import get_logger
+from eegpipe.utils.paths import annotations_csv, file_index_csv
 
 logger = get_logger("01_download")
 

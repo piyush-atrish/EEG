@@ -1,6 +1,8 @@
-import numpy as np
-import mne
 from pathlib import Path
+
+import mne
+import numpy as np
+
 from eegpipe.utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
@@ -21,7 +23,7 @@ def read_edf_header(edf_path: Path) -> dict:
 def load_edf_channels(edf_path: Path, channels: list[str], aliases: dict, fs_expected: int = 256) -> tuple[np.ndarray, float]:
     """Load EDF, resolve aliases, pick channels in order, and return float32 uV array."""
     raw = mne.io.read_raw_edf(edf_path, preload=True, verbose=False)
-    
+
     if raw.info["sfreq"] != fs_expected:
         raise ValueError(f"Expected fs={fs_expected}, got {raw.info['sfreq']} in {edf_path.name}")
 
@@ -36,5 +38,5 @@ def load_edf_channels(edf_path: Path, channels: list[str], aliases: dict, fs_exp
     raw.pick(channels)
     raw.reorder_channels(channels)
     data_uV = raw.get_data() * 1e6
-    
+
     return data_uV.astype(np.float32), raw.info["sfreq"]

@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 def annotations_csv(cfg: dict) -> Path:
     return Path(cfg["paths"]["interim"]) / "annotations.csv"
 

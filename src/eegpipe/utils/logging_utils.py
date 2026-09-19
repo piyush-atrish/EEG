@@ -1,14 +1,14 @@
 import logging
 import sys
-from pathlib import Path
+
 
 def get_logger(name: str) -> logging.Logger:
     logger = logging.getLogger(name)
-    
+
     # Prevent duplicate handlers if called multiple times
     if logger.hasHandlers():
         return logger
-        
+
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -16,7 +16,7 @@ def get_logger(name: str) -> logging.Logger:
     ch = logging.StreamHandler(sys.stdout)
     ch.setFormatter(formatter)
     logger.addHandler(ch)
-    
+
     # File Handler (Ensures logs are never lost if terminal closes)
     try:
         from eegpipe.config import find_repo_root

@@ -1,7 +1,9 @@
 import time
 from pathlib import Path
-import wfdb
+
 import requests
+import wfdb
+
 from eegpipe.utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
@@ -40,13 +42,13 @@ def download_edfs(cfg: dict, files: list[str]) -> list[str]:
     raw_dir = Path(cfg["paths"]["raw"])
     db = cfg["dataset"]["physionet_db"]
     failed_files = []
-    
+
     logger.info(f"Downloading {len(files)} EDF files...")
     for file_path in files:
         target = raw_dir / file_path
         if target.exists():
             continue
-        
+
         retries = 3
         success = False
         for attempt in range(retries):
@@ -57,9 +59,9 @@ def download_edfs(cfg: dict, files: list[str]) -> list[str]:
             except Exception as e:
                 logger.warning(f"Failed to download {file_path} (Attempt {attempt+1}/{retries}): {e}")
                 time.sleep(2)
-                
+
         if not success:
             failed_files.append(file_path)
-            
+
     logger.info("EDF download phase complete.")
     return failed_files
