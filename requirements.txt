@@ -1,0 +1,12 @@
+# --- A ---
+pytest
+pyyaml
+numpy
+pandas
+wfdb
+mne
+scipy
+
+# --- B ---
+
+# --- C ---

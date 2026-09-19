@@ -1,0 +1,21 @@
+# --- Project-Specific Ignores (Contract) ---
+data/*
+!data/**/.gitkeep
+
+results/predictions/*
+!results/predictions/.gitkeep
+
+results/logs/*
+!results/logs/.gitkeep
+
+caches/
+checkpoints/
+
+# --- Standard Python Ignores ---
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.DS_Store
