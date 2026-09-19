@@ -1,12 +1,31 @@
 import logging
+import sys
+
 
 def get_logger(name: str) -> logging.Logger:
-    """Return a configured logger with console output."""
     logger = logging.getLogger(name)
-    if not logger.handlers:
-        logger.setLevel(logging.INFO)
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
+
+    # Prevent duplicate handlers if called multiple times
+    if logger.hasHandlers():
+        return logger
+
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+    # Console Handler
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
+    # File Handler (Ensures logs are never lost if terminal closes)
+    try:
+        from eegpipe.config import find_repo_root
+        log_dir = find_repo_root() / "results" / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        fh = logging.FileHandler(log_dir / "pipeline.log")
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+    except Exception:
+        pass # Fallback gracefully if used outside project structure
+
     return logger

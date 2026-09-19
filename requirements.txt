@@ -1,4 +1,4 @@
-# --- A ---
+# --- A (Ingestion & Preprocessing) ---
 pytest
 pyyaml
 numpy
@@ -6,7 +6,15 @@ pandas
 wfdb
 mne
 scipy
+joblib
+requests
+matplotlib
 
-# --- B ---
+# --- B (Feature Extraction) ---
+scikit-learn
+pyarrow
+numba
+PyWavelets
 
-# --- C ---
+# --- C (Modeling) ---
+ruff

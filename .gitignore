@@ -1,12 +1,15 @@
 # --- Project-Specific Ignores (Contract) ---
-data/*
+data/**
+!data/**/
 !data/**/.gitkeep
 
-results/predictions/*
-!results/predictions/.gitkeep
+results/predictions/**
+!results/predictions/**/
+!results/predictions/**/.gitkeep
 
-results/logs/*
-!results/logs/.gitkeep
+results/logs/**
+!results/logs/**/
+!results/logs/**/.gitkeep
 
 caches/
 checkpoints/

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+
 def feature_names(cfg: dict) -> list[str]:
     raise NotImplementedError
 
