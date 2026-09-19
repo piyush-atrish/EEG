@@ -17,3 +17,9 @@ def features_path(cfg: dict, case: str) -> Path:
 
 def predictions_path(cfg: dict, arm: str, model: str) -> Path:
     return Path(cfg["paths"]["predictions"]) / f"{arm}__{model}.parquet"
+
+def ensure_parent(path: Path | str) -> Path:
+    """Ensure the parent directory of the given path exists, and return the path."""
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    return p

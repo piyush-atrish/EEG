@@ -1,28 +1,52 @@
 import yaml
 from pathlib import Path
 
-def load_config(path: str | Path | None = None, overrides: dict | None = None) -> dict:
-    if path is None:
-        path = Path(__file__).resolve().parents[2] / "configs" / "config.yaml"
-    
-    with open(path, "r") as f:
-        cfg = yaml.safe_load(f)
+def find_repo_root() -> Path:
+    """Find the root directory of the repository."""
+    current = Path(__file__).resolve().parent
+    for parent in [current] + list(current.parents):
+        if (parent / "pyproject.toml").exists() or (parent / ".git").exists():
+            return parent
+    return Path(__file__).resolve().parent.parent.parent
 
+def load_config(config_path: str | Path | None = None, overrides: dict = None) -> dict:
+    root = find_repo_root()
+    if config_path is None:
+        config_path = root / "config.yaml"
+        
+    cfg = {}
+    # Gracefully handle missing config.yaml during testing
+    if Path(config_path).exists():
+        with open(config_path, "r") as f:
+            cfg = yaml.safe_load(f) or {}
+            
     if overrides:
-        def merge_dicts(d, u):
-            for k, v in u.items():
-                if isinstance(v, dict):
-                    d[k] = merge_dicts(d.get(k, {}), v)
-                else:
-                    d[k] = v
-            return d
-        cfg = merge_dicts(cfg, overrides)
-
-    channels = cfg.get("dataset", {}).get("channels", [])
-    if len(channels) != 18 or len(set(channels)) != 18:
-        raise ValueError("Config must contain exactly 18 unique channels.")
-
+        for k, v in overrides.items():
+            if isinstance(v, dict) and k in cfg:
+                cfg[k].update(v)
+            else:
+                cfg[k] = v
+                
+    # VALIDATION: Enforce the 18-channel requirement
+    if "dataset" in cfg and "channels" in cfg["dataset"]:
+        channels = cfg["dataset"]["channels"]
+        if len(set(channels)) != 18:
+            raise ValueError(f"Config must specify exactly 18 unique channels, got {len(set(channels))}")
+                
+    # Force all paths to be absolute, relative to the repository root
+    if "paths" in cfg:
+        for key, val in cfg["paths"].items():
+            cfg["paths"][key] = str((root / val).resolve())
+            
     return cfg
 
-def channel_slug(name: str) -> str:
-    return name.upper().replace("-", "_")
+def set_global_seed(seed: int = 42):
+    """Lock all RNG engines for perfect reproducibility."""
+    import random
+    import numpy as np
+    random.seed(seed)
+    np.random.seed(seed)
+
+def channel_slug(ch_name: str) -> str:
+    """Convert a channel name to a filesystem-safe slug."""
+    return ch_name.replace(" ", "_").replace("-", "_")

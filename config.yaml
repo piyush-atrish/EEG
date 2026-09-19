@@ -1,0 +1,46 @@
+project:
+  seed: 42
+  max_hours_per_patient: 2.0
+  n_jobs: 4
+
+paths:
+  raw: "data/raw/chbmit"
+  interim: "data/interim"
+  preprocessed: "data/interim/preprocessed"
+  logs: "results/logs"
+
+dataset:
+  physionet_db: "chbmit"
+  fs: 256
+  patient_map:
+    chb21: "chb01"
+  channels:
+    - FP1-F7
+    - F7-T7
+    - T7-P7
+    - P7-O1
+    - FP1-F3
+    - F3-C3
+    - C3-P3
+    - P3-O1
+    - FP2-F4
+    - F4-C4
+    - C4-P4
+    - P4-O2
+    - FP2-F8
+    - F8-T8
+    - T8-P8
+    - P8-O2
+    - FZ-CZ
+    - CZ-PZ
+  channel_aliases:
+    "T8-P8-0": "T8-P8"
+
+preprocessing:
+  notch_hz: 60.0
+  notch_q: 30.0
+  bandpass_hz: [0.5, 45.0]
+  fir:
+    window: "kaiser"
+    ripple_db: 60.0
+    transition_hz: 1.0
