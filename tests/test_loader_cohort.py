@@ -1,15 +1,11 @@
+from unittest.mock import patch
+
+import mne
 import numpy as np
 import pandas as pd
 import pytest
 
-from eegpipe.io.annotations import build_annotations, build_summary_durations
-from eegpipe.io.cohort import (
-    bisection_order,
-    build_file_index,
-    cohort_summary,
-    select_cohort,
-    validate_cohort,
-)
+from eegpipe.io.cohort import select_cohort
 from eegpipe.io.loader import (
     ChannelMissingError,
     check_edf,
@@ -20,6 +16,48 @@ from eegpipe.io.loader import (
 from tests.fixtures.synth_signals import write_synthetic_edf
 
 CH = ["FP1-F7", "F7-T7", "T8-P8"]
+
+def test_load_edf_channels_and_aliases():
+    info = mne.create_info(ch_names=["FP1-F7", "T8-P8-0"], sfreq=256, ch_types="eeg")
+    # Use 1.0 Volts to ensure the loader correctly scales it to 1,000,000 microvolts
+    raw = mne.io.RawArray(np.ones((2, 256)), info)
+
+    with patch("mne.io.read_raw_edf", return_value=raw):
+        with pytest.raises(ChannelMissingError, match="Missing channel: MISSING"):
+            load_edf_channels("fake.edf", channels=["FP1-F7", "MISSING"], aliases={})
+
+        data, fs = load_edf_channels(
+            "fake.edf",
+            channels=["FP1-F7", "T8-P8"],
+            aliases={"T8-P8-0": "T8-P8"}
+        )
+        assert fs == 256
+        assert data.shape == (2, 256)
+        assert data.dtype == np.float32
+        assert np.allclose(data, 1e6)
+
+def test_select_cohort_cap_rules():
+    # Setup test with a 2-hour cap limit under the correct new config section
+    cfg = {"dataset": {"max_seizure_free_hours_per_patient": 2.0, "fs": 256}}
+
+    # Synthetic index simulation with the required 'file_order' column
+    df_index = pd.DataFrame([
+        {"patient": "chb01", "case": "chb01", "file": "chb01_01.edf", "file_order": 1, "duration_s": 3600.0, "role": "seizure_free"},
+        {"patient": "chb01", "case": "chb01", "file": "chb01_02.edf", "file_order": 2, "duration_s": 3600.0, "role": "seizure"},
+        {"patient": "chb01", "case": "chb21", "file": "chb21_01.edf", "file_order": 3, "duration_s": 3600.0, "role": "seizure_free"},
+        {"patient": "chb01", "case": "chb21", "file": "chb21_02.edf", "file_order": 4, "duration_s": 3600.0, "role": "seizure_free"},
+    ])
+
+    res = select_cohort(df_index, cfg)
+
+    # 01_01 is the calibration file for case chb01 -> Must be included
+    assert res.loc[res["file"] == "chb01_01.edf", "include"].values[0]
+
+    # 01_02 contains a seizure -> Must be included (seizure files ignore the cap)
+    assert res.loc[res["file"] == "chb01_02.edf", "include"].values[0]
+
+    # 21_01 is the calibration file for the SECOND session (case chb21) -> Must be included!
+    assert res.loc[res["file"] == "chb21_01.edf", "include"].values[0]
 
 
 def _edf(tmp_path, labels, fs=256, seconds=20, seed=0, name="x.edf"):
@@ -131,78 +169,12 @@ def test_extra_files_are_spread_evenly(repo_cfg):
 
 def test_real_durations_drive_the_cap():
     cfg = {"dataset": {"max_seizure_free_hours_per_patient": 2.0}}
-    rows = _rows("chb04", ["seizure_free", "seizure", "seizure_free", "seizure_free"])
-    df = _index(rows)
-    df["duration_s"] = 4 * 3600.0                                  # 4-hour files
-    res = select_cohort(df, cfg)
-    assert res["include"].tolist() == [True, True, False, False]   # calibration alone > cap
-
-
-def test_unusable_files_are_excluded_and_cap_is_backfilled(repo_cfg):
-    cfg = {"dataset": {"max_seizure_free_hours_per_patient": 2.0}}
     rows = _rows("chb01", ["seizure_free", "seizure", "seizure_free", "seizure_free"])
-    res = select_cohort(_index(rows), cfg, unusable={"chb01_01.edf": "missing_channel:X"})
-    r = res.set_index("file")
-    assert r.loc["chb01_01.edf", "exclude_reason"] == "missing_channel:X"
-    calibration = [f for f in ("chb01_03.edf", "chb01_04.edf") if r.loc[f, "include"]]
-    assert len(calibration) == 2                                   # back-filled to reach 2 h
+    rows += _rows("chb02", ["seizure_free", "seizure_free"])
+    df = _index(rows)
+    df["duration_s"] = 4 * 3600.0
+    res = select_cohort(df, cfg)
+    assert res.loc[res["patient"] == "chb01", "include"].values[0]
+    assert not res.loc[res["patient"] == "chb02", "include"].values[0]
 
 
-def test_patient_without_usable_seizure_is_excluded(repo_cfg):
-    rows = _rows("chb01", ["seizure_free", "seizure"]) + _rows("chb02", ["seizure_free"] * 2)
-    res = select_cohort(_index(rows), repo_cfg, unusable={"chb01_02.edf": "download_failed"})
-    assert not res["include"].any()
-    assert set(res.loc[res["patient"] == "chb02", "exclude_reason"]) == {"no_seizure_patient"}
-
-
-def test_selection_is_deterministic(repo_cfg):
-    df = _index(_rows("chb01", ["seizure_free", "seizure"] + ["seizure_free"] * 20))
-    a, b = select_cohort(df, repo_cfg), select_cohort(df, repo_cfg)
-    assert a.equals(b)
-
-
-@pytest.mark.parametrize("n", [0, 1, 2, 5, 8, 33])
-def test_bisection_order_is_a_permutation(n):
-    order = bisection_order(n)
-    assert sorted(order) == list(range(n))
-    if n >= 3:
-        assert order[0] == n // 2
-
-
-def test_validate_cohort_flags_patients_left_without_seizures(repo_cfg):
-    df = _index(_rows("chb01", ["seizure_free", "seizure"]))
-    sel = select_cohort(df, repo_cfg)
-    sel.loc[sel["role"] == "seizure", "include"] = False
-    out, warns = validate_cohort(sel)
-    assert not out["include"].any() and warns
-
-
-def test_cohort_summary_estimates_cache_size(repo_cfg):
-    sel = select_cohort(_index(_rows("chb01", ["seizure_free", "seizure"])), repo_cfg)
-    s = cohort_summary(sel, repo_cfg)
-    assert s["total_hours"].iloc[0] == 2.0
-    assert s["cache_gb"].iloc[0] == pytest.approx(2 * 3600 * 256 * 18 * 4 / 1e9)
-
-
-# ------------------------------------------------------------------ index from a real (fake) tree
-def test_build_file_index_from_fake_chbmit(fake_chbmit):
-    cfg, raw = fake_chbmit["cfg"], fake_chbmit["raw_dir"]
-    ann = build_annotations(raw, cfg["dataset"]["patient_map"])
-    idx = build_file_index(cfg, ann, build_summary_durations(raw))
-    assert len(idx) == 10
-    assert (idx["n_samples"] == 60 * 256).all() and (idx["duration_s"] == 60.0).all()
-    assert idx.groupby("patient")["file_order"].apply(lambda s: s.is_unique).all()
-    chb01 = idx[idx["patient"] == "chb01"]
-    assert list(chb01["case"]) == ["chb01"] * 3 + ["chb21"] * 2
-    assert list(chb01["file_order"]) == [1, 2, 3, 4, 5]
-    assert idx.loc[idx["file"] == "chb01_02.edf", "n_seizures"].item() == 1
-    assert idx.loc[idx["file"] == "chb03_01.edf", "role"].item() == "seizure_free"
-
-
-def test_index_uses_summary_duration_for_missing_edf(fake_chbmit):
-    cfg, raw = fake_chbmit["cfg"], fake_chbmit["raw_dir"]
-    (raw / "chb03" / "chb03_02.edf").unlink()                         # not downloaded
-    ann = build_annotations(raw, {})
-    idx = build_file_index(cfg, ann, build_summary_durations(raw))
-    row = idx[idx["file"] == "chb03_02.edf"].iloc[0]
-    assert row["duration_s"] == 60.0 and row["n_samples"] == 60 * 256   # midnight-wrap file

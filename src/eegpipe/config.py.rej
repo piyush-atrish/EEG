@@ -1,0 +1,8 @@
+diff a/src/eegpipe/config.py b/src/eegpipe/config.py	(rejected hunks)
+@@ -91,4 +91,4 @@ def channel_slug(name: str) -> str:
+ 
+ def get_paths(cfg: dict) -> dict[str, Path]:
+     """Return every configured path as a ``Path`` object."""
+-    return {key: Path(val) for key, val in cfg["paths"].items()}
+\ No newline at end of file
++    return {key: Path(val) for key, val in cfg["paths"].items()}

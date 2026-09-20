@@ -4,6 +4,12 @@ from __future__ import annotations
 from pathlib import Path
 
 
+def ensure_parent(path: Path | str) -> Path:
+    """Ensure the parent directory of the given path exists, and return the path."""
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    return p
+
 def annotations_csv(cfg: dict) -> Path:
     return Path(cfg["paths"]["interim"]) / "annotations.csv"
 
@@ -30,11 +36,4 @@ def predictions_path(cfg: dict, arm: str, model: str) -> Path:
 
 def preprocess_status_csv(cfg: dict) -> Path:
     return Path(cfg["paths"]["logs"]) / "preprocess_status.csv"
-
-
-def ensure_parent(path: str | Path) -> Path:
-    """Create the parent directory of ``path`` (if needed) and return ``path`` as a Path."""
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    return path
 

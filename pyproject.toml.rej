@@ -1,0 +1,22 @@
+diff a/pyproject.toml b/pyproject.toml	(rejected hunks)
+@@ -17,6 +17,11 @@ dependencies = [
+     "numba",
+     "PyWavelets",
+     "joblib",
++    "mne",
++    "wfdb",
++    "requests",
++    "tqdm",
++    "scikit-learn",
+ ]
+ 
+ 
+@@ -39,4 +44,7 @@ target-version = "py311"
+ [tool.ruff.lint]
+ select = ["E", "F", "W", "I"]
+ 
++[tool.ruff.lint.per-file-ignores]
++"tests/*" = ["E501"]
++
+ [tool.ruff.lint.isort]
+\ No newline at end of file

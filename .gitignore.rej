@@ -1,0 +1,35 @@
+diff a/.gitignore b/.gitignore	(rejected hunks)
+@@ -34,18 +34,22 @@ caches/
+ checkpoints/
+ 
+ # --- Data & results (configs/config.yaml -> paths.*) ---
+-# Everything under data/ and results/ is generated or downloaded, never
+-# committed. `preprocessed`, `windows`, `features`, `predictions` in
+-# particular can be tens of GB across the full cohort.
+-data/
++# Ignore everything under data/, then re-include directories and the .gitkeep placeholders.
++# (A plain "data/" or "results/" line would make .gitkeep un-ignoring impossible, and would
++# also block results/tables and results/figures, which ARE committed.)
+ data/**
+-results/
+-
+-# Keep the directory structure itself under git even though it's empty
+-# (handy so a fresh clone has the right skeleton without anyone having to
+-# remember the exact paths) -- add a .gitkeep in each dir you want kept,
+-# e.g. `data/raw/chbmit/.gitkeep`, and un-ignore just that file:
+-!**/.gitkeep
++!data/**/
++!data/**/.gitkeep
++results/predictions/**
++!results/predictions/.gitkeep
++results/logs/**
++!results/logs/.gitkeep
++# Safety net: raw/cached data must never be committed, wherever it ends up
++*.edf
++*.npy
++*.npz
++*.parquet
++*.h5
+ 
+ # --- Model / evaluation artifacts (Member C, Section evaluation.*) ---
+ *.joblib
