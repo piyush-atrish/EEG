@@ -1,3 +1,38 @@
+# --- Project data and generated artifacts (never commit) ---
+# Pattern note: "data/*" would block re-including nested .gitkeep files, so ignore
+# everything under data/ and then re-include directories and .gitkeep placeholders.
+data/**
+!data/**/
+!data/**/.gitkeep
+results/predictions/**
+!results/predictions/.gitkeep
+results/logs/**
+!results/logs/.gitkeep
+
+# Safety net: raw and cached data must never be committed from anywhere
+*.edf
+*.npy
+*.npz
+*.parquet
+*.h5
+
+# --- Python / tooling ---
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+.numba_cache/
+build/
+dist/
+.DS_Store
+caches/
+checkpoints/
+
 # --- Data & results (configs/config.yaml -> paths.*) ---
 # Everything under data/ and results/ is generated or downloaded, never
 # committed. `preprocessed`, `windows`, `features`, `predictions` in

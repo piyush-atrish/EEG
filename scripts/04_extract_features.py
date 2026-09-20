@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """CLI: extract Contract C5 features for the cohort, one process per case (Member B, Step 9).
 
 Usage
@@ -73,3 +74,18 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+=======
+"""Extract features (contract C5) (owner: Member B, Step 9). Stub created by Member A at kickoff."""
+
+from __future__ import annotations
+
+import sys
+
+
+def main(argv: list[str] | None = None) -> int:
+    raise NotImplementedError("Owner implements this script (accepts --config and --patients).")
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+>>>>>>> origin/main
