@@ -9,15 +9,18 @@ def find_repo_root() -> Path:
     for parent in [current] + list(current.parents):
         if (parent / "pyproject.toml").exists() or (parent / ".git").exists():
             return parent
-    return Path(__file__).resolve().parent.parent.parent
+    return Path.cwd().resolve()
 
-def deep_update(d, u):
-    for k, v in u.items():
-        if isinstance(v, collections.abc.Mapping):
-            d[k] = deep_update(d.get(k, {}), v)
+
+def _deep_merge(base: dict, updates: dict) -> dict:
+    """Return a new dict: ``updates`` merged recursively into ``base`` (lists are replaced)."""
+    merged = copy.deepcopy(base)
+    for key, value in updates.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _deep_merge(merged[key], value)
         else:
-            d[k] = v
-    return d
+            merged[key] = copy.deepcopy(value)
+    return merged
 
 def load_config(config_path: str | Path | None = None, overrides: dict = None) -> dict:
     root = find_repo_root()

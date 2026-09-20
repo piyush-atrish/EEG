@@ -1,4 +1,4 @@
-"""Download CHB-MIT metadata and cohort EDFs, then build annotations.csv (C1) and file_index.csv (C2).
+"""Download CHB-MIT metadata and cohort EDFs; build annotations.csv (C1) and file_index.csv (C2).
 
 Flow (repeated until the cohort is stable, at most ``--max-iter`` rounds):
 
@@ -110,7 +110,9 @@ def main(argv: list[str] | None = None) -> int:
         selected = cohort[cohort["include"]]
 
         missing = [
-            f"{r.case}/{r.file}" for r in selected.itertuples() if not (raw_dir / r.case / r.file).exists()
+            f"{r.case}/{r.file}"
+            for r in selected.itertuples()
+            if not (raw_dir / r.case / r.file).exists()
         ]
         if missing and not args.skip_download:
             result = download_edfs(cfg, missing, args.workers)

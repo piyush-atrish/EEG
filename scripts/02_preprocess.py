@@ -54,8 +54,7 @@ def main(argv: list[str] | None = None) -> int:
     logger.info("Status counts: %s", counts)
     failed = counts.get("failed", 0)
     if failed:
-        logger.error("Pipeline finished with %d failed file(s); see results/logs/preprocess_status.csv",
-                     failed)
+        logger.error("%d file(s) failed; see results/logs/preprocess_status.csv", failed)
         return 1
     return 0
 

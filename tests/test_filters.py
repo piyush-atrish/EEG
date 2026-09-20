@@ -1,59 +1,83 @@
 import numpy as np
-import scipy.signal as signal
+import pytest
+from scipy import signal
 
-from eegpipe.preprocessing.filters import apply_filters
+from eegpipe.preprocessing.filters import (
+    apply_filters,
+    design_bandpass_fir,
+    filter_summary,
+    freq_response,
+    save_response_plot,
+)
 from tests.fixtures.synth_signals import make_synthetic_raw_array
 
+FS = 256.0
 
-def test_filter_characteristics_and_apply():
-    cfg = {
-        "preprocessing": {
-            "notch_hz": 60.0,
-            "notch_q": 30.0,
-            "bandpass_hz": [0.5, 45.0],
-            "fir": {"window": "kaiser", "ripple_db": 60.0, "transition_hz": 1.0}
-        }
-    }
-    fs = 256.0
 
-    # Create signal with 10Hz and 60Hz + heavy DC offset (+50.0)
-    x = make_synthetic_raw_array(fs=fs, seconds=10.0, tones_hz=(10.0, 60.0), n_ch=2, seed=42)
-    x += 50.0
+def _psd(x):
+    return signal.welch(x, FS, nperseg=1024, detrend=False)
 
-    x_filtered = apply_filters(x, fs, cfg)
 
-    # Output shape and dtype must be preserved
-    assert x_filtered.shape == x.shape
-    assert x_filtered.dtype == np.float32
+def test_design_matches_documented_numbers(repo_cfg):
+    s = filter_summary(FS, repo_cfg)
+    assert 900 <= s["numtaps"] <= 960 and s["numtaps"] % 2 == 1
+    assert s["group_delay_s"] == pytest.approx(1.82, abs=0.05)
+    g = s["gain_db"]
+    assert g[0.5] == pytest.approx(-6.0, abs=0.5) and g[45.0] == pytest.approx(-6.0, abs=0.5)
+    assert g[0.0] < -50 and g[60.0] < -80
+    assert s["passband_ripple_db"] < 0.01
+    assert s["worst_stopband_above_46hz_db"] < -58
 
-    # DC COMPLETELY REMOVED:
-    # Use raw mean, NOT signal.welch (which detrends by default and creates a false positive)
-    dc_mean_in = np.mean(x)
-    dc_mean_out = np.mean(x_filtered)
-    assert np.abs(dc_mean_in) > 40.0
-    assert np.abs(dc_mean_out) < 0.1
 
-    # Measure attenuation using Welch PSD (with detrending off to maintain strict bin power)
-    f, pxx_in = signal.welch(x[0], fs, nperseg=1024, detrend=False)
-    f, pxx_out = signal.welch(x_filtered[0], fs, nperseg=1024, detrend=False)
+def test_removes_60hz_keeps_10hz_and_dc_is_removed(repo_cfg):
+    x = make_synthetic_raw_array(fs=int(FS), seconds=10.0, n_ch=2, seed=42)
+    x += 50.0                                                         # DC offset
+    y = apply_filters(x, FS, repo_cfg)
+    f, p_in = _psd(x[0] - x[0].mean())
+    _, p_out = _psd(y[0])
+    i10, i60 = np.argmin(np.abs(f - 10)), np.argmin(np.abs(f - 60))
+    assert abs(10 * np.log10(p_in[i10] / p_out[i10])) < 0.5
+    assert 10 * np.log10(p_in[i60] / p_out[i60]) > 40
+    assert abs(y.mean()) / abs(x.mean()) < 0.01     # relative: > 40 dB DC rejection
+    assert np.abs(x).mean() > 40                    # a no-op filter would fail the line above
 
-    idx_10 = np.argmin(np.abs(f - 10.0))
-    idx_60 = np.argmin(np.abs(f - 60.0))
 
-    pow_10_in = 10 * np.log10(pxx_in[idx_10])
-    pow_10_out = 10 * np.log10(pxx_out[idx_10])
-    pow_60_in = 10 * np.log10(pxx_in[idx_60])
-    pow_60_out = 10 * np.log10(pxx_out[idx_60])
+def test_shape_dtype_and_short_and_1d_inputs(repo_cfg):
+    x = np.random.default_rng(0).normal(size=(3, 5000)).astype(np.float32)
+    y = apply_filters(x, FS, repo_cfg)
+    assert y.shape == x.shape and y.dtype == np.float32
+    assert apply_filters(x[0], FS, repo_cfg).shape == (5000,)
+    assert apply_filters(x[:, :100], FS, repo_cfg).shape == (3, 100)  # shorter than the filter
+    with pytest.raises(ValueError):
+        apply_filters(np.zeros((2, 2, 2)), FS, repo_cfg)
 
-    # 10 Hz amplitude preserved within 0.5 dB
-    assert np.abs(pow_10_in - pow_10_out) < 0.5
-    # 60 Hz attenuated by at least 40 dB
-    assert (pow_60_in - pow_60_out) > 40.0
 
-    # Zero delay test (cross-correlation peak at lag 0)
-    t = np.arange(int(fs * 2.0)) / fs
-    s_10 = np.sin(2 * np.pi * 10 * t).astype(np.float32)[np.newaxis, :]
-    s_10_filt = apply_filters(s_10, fs, cfg)
-    corr = signal.correlate(s_10[0], s_10_filt[0], mode='full')
-    lag = np.argmax(corr) - (len(s_10[0]) - 1)
-    assert lag == 0
+def test_no_time_shift(repo_cfg):
+    t = np.arange(int(20 * FS)) / FS
+    x = np.sin(2 * np.pi * 10 * t + 0.3)[np.newaxis, :].astype(np.float32)
+    y = apply_filters(x, FS, repo_cfg)[0]
+    mid = slice(int(5 * FS), int(15 * FS))
+    corr = signal.correlate(y[mid], x[0][mid], mode="full")
+    assert np.argmax(corr) - (len(y[mid]) - 1) == 0
+
+
+def test_channelwise_equals_all_at_once_reference(repo_cfg):
+    """The memory-saving per-channel loop must give the same numbers as filtering the array."""
+    x = np.random.default_rng(3).normal(size=(4, 4000)).astype(np.float32)
+    prep = repo_cfg["preprocessing"]
+    h = design_bandpass_fir(FS, *prep["bandpass_hz"], prep["fir"]["ripple_db"],
+                            prep["fir"]["transition_hz"])
+    b, a = signal.iirnotch(prep["notch_hz"], prep["notch_q"], FS)
+    pad = len(h) // 2
+    ref = signal.filtfilt(b, a, x.astype(np.float64), axis=-1)
+    ref = np.pad(ref, [(0, 0), (pad, pad)], mode="reflect")
+    ref = signal.oaconvolve(ref, h[np.newaxis, :], mode="same", axes=-1)[..., pad:-pad]
+    np.testing.assert_allclose(apply_filters(x, FS, repo_cfg), ref, atol=1e-4)
+
+
+def test_response_plot_is_written_to_the_given_path_only(tmp_path, repo_cfg):
+    h = design_bandpass_fir(FS, 0.5, 45.0, 60.0, 1.0)
+    out = save_response_plot(h, FS, tmp_path / "sub" / "r.png")
+    assert out.exists() and out.stat().st_size > 1000
+    w, mag = freq_response(h, FS)
+    assert len(w) == len(mag)

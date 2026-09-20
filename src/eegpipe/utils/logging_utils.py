@@ -1,5 +1,8 @@
+"""Logging helpers (the project uses ``logging``, never ``print``)."""
+
+from __future__ import annotations
+
 import logging
-import sys
 from pathlib import Path
 
 

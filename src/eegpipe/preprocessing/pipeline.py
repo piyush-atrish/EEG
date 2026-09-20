@@ -193,7 +193,7 @@ def preprocess_all(
         res_df = pd.DataFrame(columns=["file", "case", "status"])
     else:
         res_df = res_df.sort_values("file").reset_index(drop=True)
-    res_df.insert(0, "run_id", datetime.now().strftime("%Y%m%d-%H%M%S"))
+    res_df.insert(0, "run_id", f"{datetime.now():%Y%m%d-%H%M%S}-{uuid.uuid4().hex[:4]}")
     _append_status_log(res_df, cfg)
 
     failed = int((res_df["status"] == "failed").sum())

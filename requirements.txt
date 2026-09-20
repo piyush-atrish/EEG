@@ -1,20 +1,27 @@
-# --- A (Ingestion & Preprocessing) ---
-pytest
-pyyaml
-numpy
-pandas
-wfdb
-mne
-scipy
-joblib
-requests
-matplotlib
+# Install with:  pip install -r requirements.txt && pip install -e .
+# Lower bounds only. After the first successful install on Python 3.11, run `pip freeze`
+# and pin exact versions here (a joint PR). Add packages ONLY inside your own block, and
+# never repeat a package that already appears in another block.
 
-# --- B (Feature Extraction) ---
-scikit-learn
-pyarrow
-numba
-PyWavelets
+# --- A ---
+numpy>=1.26
+scipy>=1.11
+pandas>=2.1
+pyyaml>=6.0
+mne>=1.6
+wfdb>=4.1
+requests>=2.31
+joblib>=1.3
+tqdm>=4.66
+matplotlib>=3.8
+pytest>=7.4
+ruff>=0.4
+edfio>=0.4          # tests write tiny synthetic EDF files
 
-# --- C (Modeling) ---
-ruff
+# --- B ---
+pyarrow>=14.0       # parquet I/O (also used by C)
+numba>=0.59         # entropy features
+PyWavelets>=1.5     # DWT features
+
+# --- C ---
+scikit-learn>=1.3

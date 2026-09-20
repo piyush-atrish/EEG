@@ -5,14 +5,31 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "eegpipe"
 version = "0.1.0"
+description = "Cross-subject EEG seizure detection: baseline DSP pipeline (Milestone 1)"
 requires-python = ">=3.11"
 
+dependencies = [
+    "numpy",
+    "scipy",
+    "pandas",
+    "pyyaml",
+    "pyarrow",
+    "numba",
+    "PyWavelets",
+    "joblib",
+]
+
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.pytest.ini_options]
-pythonpath = ["src", "."]
+pythonpath = ["."]
+testpaths = ["tests"]
 markers = [
-    "slow: marks tests as slow",
+    "slow: marks tests as slow (real EDF files, process pools)",
     "integration: full chain on synthetic data",
-    "needs_data: requires real CHB-MIT data"
+    "needs_data: requires real CHB-MIT data",
 ]
 
 [tool.ruff]
