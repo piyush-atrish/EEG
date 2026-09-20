@@ -1,6 +1,8 @@
-import yaml
 import collections.abc
 from pathlib import Path
+
+import yaml
+
 
 def find_repo_root() -> Path:
     current = Path(__file__).resolve().parent
@@ -21,29 +23,30 @@ def load_config(config_path: str | Path | None = None, overrides: dict = None) -
     root = find_repo_root()
     if config_path is None:
         config_path = root / "configs" / "config.yaml"
-        
+
     if not Path(config_path).exists():
         raise FileNotFoundError(f"Configuration file not found at {config_path}")
-        
+
     with open(config_path, "r") as f:
         cfg = yaml.safe_load(f) or {}
-        
+
     if overrides:
         cfg = deep_update(cfg, overrides)
-        
+
     if "dataset" in cfg and "channels" in cfg["dataset"]:
         channels = cfg["dataset"]["channels"]
         if len(set(channels)) != 18:
             raise ValueError(f"Config must specify exactly 18 unique channels, got {len(set(channels))}")
-            
+
     if "paths" in cfg:
         for key, val in cfg["paths"].items():
             cfg["paths"][key] = str((root / val).resolve())
-            
+
     return cfg
 
 def set_global_seed(seed: int = 42):
     import random
+
     import numpy as np
     random.seed(seed)
     np.random.seed(seed)

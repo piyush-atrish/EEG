@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 def ensure_parent(path: Path | str) -> Path:
     """Ensure the parent directory of the given path exists, and return the path."""
     p = Path(path)
