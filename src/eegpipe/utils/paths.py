@@ -1,4 +1,3 @@
-"""Path builders for every artifact in the README contracts (no path is ever hard-coded)."""
 
 from __future__ import annotations
 
@@ -38,3 +37,4 @@ def ensure_parent(path: str | Path) -> Path:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     return path
+

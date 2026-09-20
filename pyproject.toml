@@ -8,6 +8,18 @@ version = "0.1.0"
 description = "Cross-subject EEG seizure detection: baseline DSP pipeline (Milestone 1)"
 requires-python = ">=3.11"
 
+dependencies = [
+    "numpy",
+    "scipy",
+    "pandas",
+    "pyyaml",
+    "pyarrow",
+    "numba",
+    "PyWavelets",
+    "joblib",
+]
+
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
@@ -28,4 +40,3 @@ target-version = "py311"
 select = ["E", "F", "W", "I"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["eegpipe", "tests"]
