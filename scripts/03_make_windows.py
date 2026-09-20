@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 """CLI: build Contract C4 window tables for the cohort (Member B, Step 6).
 
 Usage
@@ -21,8 +20,12 @@ logger = get_logger(__name__)
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Build labelled windows (Contract C4) from preprocessed EEG.")
-    parser.add_argument("--config", type=str, default="configs/config.yaml")
+    parser = argparse.ArgumentParser(
+        description="Build labelled windows (Contract C4) from preprocessed EEG."
+    )
+    parser.add_argument(
+        "--config", type=str, default=None, help="config (default: <repo>/configs/config.yaml)"
+    )
     parser.add_argument("--patients", nargs="*", default=None)
     args = parser.parse_args(argv)
 
@@ -62,18 +65,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-=======
-"""Build window tables, contract C4 (owner: Member B, Step 6). Stub from Member A."""
-
-from __future__ import annotations
-
-import sys
-
-
-def main(argv: list[str] | None = None) -> int:
-    raise NotImplementedError("Owner implements this script (accepts --config and --patients).")
-
-
-if __name__ == "__main__":
-    sys.exit(main())
->>>>>>> origin/main

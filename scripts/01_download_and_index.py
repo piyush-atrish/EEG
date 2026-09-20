@@ -170,6 +170,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.patients and not cohort["include"].any():
         logger.error("No files included for %s", args.patients)
         return 1
+    # If a patient originally had seizures but all were excluded, fail the pipeline
+    for p, g in cohort.groupby('patient'):
+        total_seizures = (g['role'] == 'seizure').sum()
+        included_seizures = (g['include'] & (g['role'] == 'seizure')).sum()
+        if total_seizures > 0 and included_seizures == 0:
+            return 1
     return 0
 
 

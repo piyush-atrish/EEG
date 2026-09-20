@@ -1,0 +1,56 @@
+diff a/src/eegpipe/features/extract.py b/src/eegpipe/features/extract.py	(rejected hunks)
+@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
+ 
+ _META_COLUMNS = ["patient", "case", "file", "start_sample", "t_start_s", "label"]
+ _NON_FINITE_WARN_FRACTION = 0.001  # 0.1 %
++_GROUP_ORDER = ("time", "frequency", "nonlinear", "wavelet")
+ 
+ 
+ def _flat_catalog(cfg: dict) -> list[str]:
+@@ -41,10 +42,12 @@ def _flat_catalog(cfg: dict) -> list[str]:
+     catalog = cfg["features"]["catalog"]
+     entropy_enabled = cfg["features"]["entropy"].get("enabled", True)
+     names: list[str] = []
+-    for group, feats in catalog.items():
++    # Fixed group order (not dict order): a config re-serialised with sorted keys must not
++    # silently reorder the Contract C5 columns.
++    for group in _GROUP_ORDER:
+         if group == "nonlinear" and not entropy_enabled:
+             continue
+-        names.extend(feats)
++        names.extend(catalog[group])
+     return names
+ 
+ 
+@@ -165,7 +168,8 @@ def extract_case_features(
+     window_len = round(cfg["segmentation"]["window_s"] * fs)  # must match segmentation/windows.py
+     ordered_columns = feature_names(cfg)
+ 
+-    case_files = file_index.loc[(file_index["case"] == case) & (file_index["include"].astype(bool))].copy()
++    is_case = file_index["case"] == case
++    case_files = file_index.loc[is_case & file_index["include"].astype(bool)].copy()
+     sort_col = "file_order" if "file_order" in case_files.columns else "file"
+     case_files = case_files.sort_values(sort_col)
+ 
+@@ -187,7 +191,9 @@ def extract_case_features(
+ 
+         for batch_start in range(0, len(starts), batch_size):
+             batch_starts = starts[batch_start : batch_start + batch_size]
+-            batch_windows = np.stack([np.asarray(arr[:, s : s + window_len]) for s in batch_starts], axis=0)
++            batch_windows = np.stack(
++                [np.asarray(arr[:, s : s + window_len]) for s in batch_starts], axis=0
++            )
+             feats = extract_batch_features(batch_windows, fs, cfg)
+ 
+             non_finite_mask = ~np.isfinite(feats)
+@@ -212,7 +218,9 @@ def extract_case_features(
+     if total_replaced > 0:
+         for col, count in zip(ordered_columns, non_finite_counts):
+             if count > 0:
+-                logger.info("case=%s: replaced %d non-finite value(s) in %r with 0.0", case, int(count), col)
++                logger.info(
++                    "case=%s: replaced %d non-finite value(s) in %r with 0.0", case, int(count), col
++                )
+         fraction = total_replaced / total_values if total_values else 0.0
+         if fraction > _NON_FINITE_WARN_FRACTION:
+             logger.warning(

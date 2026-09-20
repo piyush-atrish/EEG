@@ -1,62 +1,122 @@
 project:
   seed: 42
   n_jobs: 4
-
 paths:
-  raw: "data/raw/chbmit"
-  interim: "data/interim"
-  preprocessed: "data/interim/preprocessed"
-  windows: "data/interim/windows"
-  features: "data/processed/features"
-  predictions: "results/predictions"
-  tables: "docs/tables"
-  figures: "docs/figures"
-  logs: "results/logs"
-
+  raw: data/raw/chbmit
+  interim: data/interim
+  preprocessed: data/interim/preprocessed
+  windows: data/interim/windows
+  features: data/processed/features
+  predictions: results/predictions
+  tables: docs/tables
+  figures: docs/figures
+  logs: results/logs
 dataset:
-  physionet_db: "chbmit"
+  physionet_db: chbmit
   fs: 256
   max_seizure_free_hours_per_patient: 2.0
   patient_map:
-    chb21: "chb01"
+    chb21: chb01
   channels:
-    - FP1-F7
-    - F7-T7
-    - T7-P7
-    - P7-O1
-    - FP1-F3
-    - F3-C3
-    - C3-P3
-    - P3-O1
-    - FP2-F4
-    - F4-C4
-    - C4-P4
-    - P4-O2
-    - FP2-F8
-    - F8-T8
-    - T8-P8
-    - P8-O2
-    - FZ-CZ
-    - CZ-PZ
+  - FP1-F7
+  - F7-T7
+  - T7-P7
+  - P7-O1
+  - FP1-F3
+  - F3-C3
+  - C3-P3
+  - P3-O1
+  - FP2-F4
+  - F4-C4
+  - C4-P4
+  - P4-O2
+  - FP2-F8
+  - F8-T8
+  - T8-P8
+  - P8-O2
+  - FZ-CZ
+  - CZ-PZ
   channel_aliases:
-    "T8-P8-0": "T8-P8"
-
+    T8-P8-0: T8-P8
 preprocessing:
   notch_hz: 60.0
   notch_q: 30.0
-  bandpass_hz: [0.5, 45.0]
+  bandpass_hz:
+  - 0.5
+  - 45.0
   fir:
-    window: "kaiser"
+    window: kaiser
     ripple_db: 60.0
     transition_hz: 1.0
-
 segmentation:
   window_s: 4.0
-  stride_s: 1.0
-
+  overlap: 0.5
+  drop_boundary_windows: true
 features:
-  wavelet: "db4"
-  levels: 4
-
+  welch:
+    nperseg_s: 1.0
+    noverlap_frac: 0.5
+  bands:
+    delta:
+    - 0.5
+    - 4.0
+    theta:
+    - 4.0
+    - 8.0
+    alpha:
+    - 8.0
+    - 13.0
+    beta:
+    - 13.0
+    - 30.0
+    gamma:
+    - 30.0
+    - 45.0
+  entropy:
+    enabled: true
+    m: 2
+    r_factor: 0.2
+    decimate: 2
+  wavelet:
+    name: db4
+    level: 5
+  dtype: float32
+  catalog:
+    time:
+    - mean
+    - std
+    - skew
+    - kurt
+    - line_length
+    - hjorth_activity
+    - hjorth_mobility
+    - hjorth_complexity
+    frequency:
+    - logpow_delta
+    - logpow_theta
+    - logpow_alpha
+    - logpow_beta
+    - logpow_gamma
+    - rel_delta
+    - rel_theta
+    - rel_alpha
+    - rel_beta
+    - rel_gamma
+    nonlinear:
+    - sampen
+    - apen
+    wavelet:
+    - dwt_logE_d1
+    - dwt_logE_d2
+    - dwt_logE_d3
+    - dwt_logE_d4
+    - dwt_logE_d5
+    - dwt_logE_a5
+    - dwt_std_d1
+    - dwt_std_d2
+    - dwt_std_d3
+    - dwt_std_d4
+    - dwt_std_d5
+    - dwt_std_a5
 evaluation:
-  cv_strategy: "loso"
+  cv_strategy: loso

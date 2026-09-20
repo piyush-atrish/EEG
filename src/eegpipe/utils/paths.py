@@ -18,3 +18,12 @@ def preprocessed_path(cfg: dict, case: str, file_stem: str) -> Path:
 
 def preprocess_status_csv(cfg: dict) -> Path:
     return Path(cfg["paths"]["logs"]) / "preprocess_status.csv"
+
+def windows_path(cfg: dict, case: str) -> Path:
+    return Path(cfg["paths"]["windows"]) / f"{case}.parquet"
+
+def features_path(cfg: dict, case: str) -> Path:
+    return Path(cfg["paths"]["features"]) / f"{case}.parquet"
+
+def predictions_path(cfg: dict) -> Path:
+    return Path(cfg["paths"]["predictions"]) / "predictions.csv"

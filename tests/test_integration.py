@@ -1,16 +1,17 @@
 """Joint integration test (all three members extend it as their scripts land).
 
-Today it checks the contracts produced by Member A (C1-C3) on the synthetic project and then
-tries stages 03-06; stages that are still stubs (NotImplementedError) are skipped, not failed.
+The stages run CHAINED inside one temporary project (03 needs C1-C3, 04 needs 03's windows,
+05 needs 04's features, 06 needs 05's predictions). A stage that is still a stub
+(``NotImplementedError``) ends the chain with a skip instead of a failure.
 """
+
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
 pytestmark = pytest.mark.integration
-
-STAGES = ["03_make_windows", "04_extract_features", "05_run_baseline", "06_make_report"]
 
 
 def test_contracts_c1_c2_c3(synthetic_project):
@@ -26,13 +27,27 @@ def test_contracts_c1_c2_c3(synthetic_project):
         assert arr.shape == (18, row.n_samples) and arr.dtype == np.float32
 
 
-@pytest.mark.parametrize("stage", STAGES)
-def test_downstream_stages_when_implemented(stage, synthetic_project, tmp_path, write_cfg,
-                                            load_script):
-    cfg_path = write_cfg(synthetic_project["cfg"], tmp_path / "cfg.yaml")
-    module = load_script(stage)
-    try:
-        rc = module.main(["--config", str(cfg_path)])
-    except NotImplementedError:
-        pytest.skip(f"{stage} is still a stub")
-    assert rc in (0, None)
+def test_full_chain_on_synthetic_project(synthetic_project, tmp_path, write_cfg, load_script):
+    cfg = synthetic_project["cfg"]
+    arg = ["--config", str(write_cfg(cfg, tmp_path / "cfg.yaml"))]
+
+    # ---- Member B: contracts C4 and C5 ----
+    assert load_script("03_make_windows").main(arg) in (0, None)
+    windows = pd.concat(pd.read_parquet(p) for p in sorted(Path(cfg["paths"]["windows"]).glob("*.parquet")))
+    assert list(windows.columns) == ["patient", "case", "file", "start_sample", "t_start_s", "label"]
+    assert (windows["label"] == 1).sum() > 0 and set(windows["label"]) <= {0, 1}
+
+    assert load_script("04_extract_features").main(arg + ["--n-jobs", "1"]) in (0, None)
+    feats = pd.concat(pd.read_parquet(p) for p in sorted(Path(cfg["paths"]["features"]).glob("*.parquet")))
+    cols = [c for c in feats.columns if c.startswith("f_")]
+    assert len(cols) == 576 and np.isfinite(feats[cols].to_numpy()).all()
+    assert len(feats) == len(windows) and set(feats["patient"]) == set(synthetic_project["patients"])
+
+    # ---- Member C (skipped until implemented) ----
+    for stage, extra in (("05_run_baseline", ["--tuning", "fixed", "--max-patients", "3"]),
+                         ("06_make_report", [])):
+        try:
+            rc = load_script(stage).main(arg + extra)
+        except NotImplementedError:
+            pytest.skip(f"{stage} is still a stub")
+        assert rc in (0, None)

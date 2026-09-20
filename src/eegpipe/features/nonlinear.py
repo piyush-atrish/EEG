@@ -56,7 +56,8 @@ def sample_entropy(x: np.ndarray, m: int, r: float) -> float:
 
 @njit(cache=True)
 def _phi(x: np.ndarray, m: int, r: float) -> float:
-    """Pincus's `Phi^m(r)`: mean log fraction of length-m vectors matching each other (self-match included)."""
+    """Pincus's `Phi^m(r)`: mean log fraction of length-m vectors that match each other
+    (self-match included)."""
     n = x.shape[0]
     count = n - m + 1
     if count <= 0:
