@@ -6,8 +6,16 @@ import pandas as pd
 import pytest
 
 from eegpipe.io.cohort import select_cohort
-from eegpipe.io.loader import ChannelMissingError, load_edf_channels
+from eegpipe.io.loader import (
+    ChannelMissingError,
+    check_edf,
+    load_edf_channels,
+    read_edf_header,
+    resolve_channel_names,
+)
+from tests.fixtures.synth_signals import write_synthetic_edf
 
+CH = ["FP1-F7", "F7-T7", "T8-P8"]
 
 def test_load_edf_channels_and_aliases():
     info = mne.create_info(ch_names=["FP1-F7", "T8-P8-0"], sfreq=256, ch_types="eeg")
