@@ -1,4 +1,4 @@
-import collections.abc
+import copy
 from pathlib import Path
 
 import yaml
@@ -34,7 +34,7 @@ def load_config(config_path: str | Path | None = None, overrides: dict = None) -
         cfg = yaml.safe_load(f) or {}
 
     if overrides:
-        cfg = deep_update(cfg, overrides)
+        cfg = _deep_merge(cfg, overrides)
 
     if "dataset" in cfg and "channels" in cfg["dataset"]:
         channels = cfg["dataset"]["channels"]
@@ -45,7 +45,7 @@ def load_config(config_path: str | Path | None = None, overrides: dict = None) -
         for key, val in cfg["paths"].items():
             cfg["paths"][key] = str((root / val).resolve())
 
-    return cfg
+    return validate_config(cfg)
 
 def set_global_seed(seed: int = 42):
     import random
@@ -56,3 +56,17 @@ def set_global_seed(seed: int = 42):
 
 def channel_slug(ch_name: str) -> str:
     return ch_name.replace(" ", "_").replace("-", "_").upper()
+
+def validate_config(cfg: dict) -> dict:
+    if "segmentation" in cfg:
+        overlap = cfg["segmentation"].get("overlap", 0)
+        if not (0 <= float(overlap) < 1):
+            raise ValueError("Overlap must be >= 0 and < 1")
+        if float(cfg["segmentation"].get("window_s", 1)) <= 0:
+            raise ValueError("Window size must be positive")
+    return cfg
+
+
+def get_paths(cfg: dict):
+    from pathlib import Path
+    return {key: Path(val) for key, val in cfg["paths"].items()}
