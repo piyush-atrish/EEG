@@ -1,1 +1,1 @@
-"""eegpipe.models subpackage (intentionally empty: import from the modules directly)."""
+"""Member C: classifier construction and per-patient normalisation arms."""
