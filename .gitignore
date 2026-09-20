@@ -1,0 +1,57 @@
+# --- Data & results (configs/config.yaml -> paths.*) ---
+# Everything under data/ and results/ is generated or downloaded, never
+# committed. `preprocessed`, `windows`, `features`, `predictions` in
+# particular can be tens of GB across the full cohort.
+data/
+data/**
+results/
+
+# Keep the directory structure itself under git even though it's empty
+# (handy so a fresh clone has the right skeleton without anyone having to
+# remember the exact paths) -- add a .gitkeep in each dir you want kept,
+# e.g. `data/raw/chbmit/.gitkeep`, and un-ignore just that file:
+!**/.gitkeep
+
+# --- Model / evaluation artifacts (Member C, Section evaluation.*) ---
+*.joblib
+*.pkl
+*.pickle
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+
+# numba's on-disk JIT cache (nonlinear.py: @njit(cache=True)) lands as
+# .nbi/.nbc files inside __pycache__, already covered above, but numba can
+# also use a top-level cache dir depending on version/config:
+.numba_cache/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+
+# --- Test / lint / type-check caches ---
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- Jupyter (notebooks/A_*, B_*, C_*) ---
+.ipynb_checkpoints/
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Secrets / local overrides ---
+.env
+*.local.yaml
