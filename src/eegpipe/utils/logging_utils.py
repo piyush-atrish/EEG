@@ -1,31 +1,34 @@
+"""Logging helpers (the project uses ``logging``, never ``print``)."""
+
+from __future__ import annotations
+
 import logging
-import sys
+from pathlib import Path
+
+_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 
-def get_logger(name: str) -> logging.Logger:
+def get_logger(name: str, log_file: str | Path | None = None) -> logging.Logger:
+    """Return a logger with console output and, optionally, a file handler.
+
+    Handlers are only added once per logger, so calling this repeatedly is safe.
+    """
     logger = logging.getLogger(name)
-
-    # Prevent duplicate handlers if called multiple times
-    if logger.hasHandlers():
-        return logger
-
     logger.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-    # Console Handler
-    ch = logging.StreamHandler(sys.stdout)
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
-
-    # File Handler (Ensures logs are never lost if terminal closes)
-    try:
-        from eegpipe.config import find_repo_root
-        log_dir = find_repo_root() / "results" / "logs"
-        log_dir.mkdir(parents=True, exist_ok=True)
-        fh = logging.FileHandler(log_dir / "pipeline.log")
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
-    except Exception:
-        pass # Fallback gracefully if used outside project structure
-
+    if not any(getattr(h, "_eegpipe_console", False) for h in logger.handlers):
+        console = logging.StreamHandler()
+        console.setFormatter(logging.Formatter(_FORMAT))
+        console._eegpipe_console = True  # type: ignore[attr-defined]
+        logger.addHandler(console)
+    if log_file is not None:
+        log_file = Path(log_file)
+        already = any(
+            isinstance(h, logging.FileHandler) and Path(h.baseFilename) == log_file.resolve()
+            for h in logger.handlers
+        )
+        if not already:
+            log_file.parent.mkdir(parents=True, exist_ok=True)
+            fh = logging.FileHandler(log_file)
+            fh.setFormatter(logging.Formatter(_FORMAT))
+            logger.addHandler(fh)
     return logger

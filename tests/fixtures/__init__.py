@@ -1,1 +1,1 @@
-"""Module init."""
+"""Synthetic data generators for tests."""
