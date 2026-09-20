@@ -1,0 +1,58 @@
+# Replace @handleA / @handleB / @handleC with the real GitHub usernames at kickoff.
+# Later lines override earlier ones. Shared files need all three approvals.
+
+/README.md                                @handleA @handleB @handleC
+/configs/                                 @handleA @handleB @handleC
+/pyproject.toml                           @handleA @handleB @handleC
+/requirements.txt                         @handleA @handleB @handleC
+/Makefile                                 @handleA @handleB @handleC
+/.github/                                 @handleA @handleB @handleC
+/.gitignore                               @handleA @handleB @handleC
+/tests/conftest.py                        @handleA @handleB @handleC
+/tests/test_integration.py                @handleA @handleB @handleC
+
+# --- Member A ---
+/src/eegpipe/config.py                    @handleA
+/src/eegpipe/utils/                       @handleA
+/src/eegpipe/io/                          @handleA
+/src/eegpipe/preprocessing/               @handleA
+/scripts/01_*.py                          @handleA
+/scripts/02_*.py                          @handleA
+/tests/fixtures/__init__.py               @handleA
+/tests/fixtures/synth_signals.py          @handleA
+/tests/test_config.py                     @handleA
+/tests/test_synth_signals.py              @handleA
+/tests/test_annotations.py                @handleA
+/tests/test_download.py                   @handleA
+/tests/test_loader_cohort.py              @handleA
+/tests/test_index_script.py               @handleA
+/tests/test_filters.py                    @handleA
+/tests/test_preprocess_pipeline.py        @handleA
+/docs/data_notes.md                       @handleA
+/docs/filter_validation.md                @handleA
+/docs/A_fix_checklist.md                  @handleA
+
+# --- Member B ---
+/src/eegpipe/segmentation/                @handleB
+/src/eegpipe/features/                    @handleB
+/scripts/03_*.py                          @handleB
+/scripts/04_*.py                          @handleB
+/tests/test_windows.py                    @handleB
+/tests/test_time_frequency_features.py    @handleB
+/tests/test_nonlinear_wavelet_features.py @handleB
+/tests/test_extract.py                    @handleB
+/docs/feature_catalog.md                  @handleB
+
+# --- Member C ---
+/src/eegpipe/models/                      @handleC
+/src/eegpipe/evaluation/                  @handleC
+/scripts/05_*.py                          @handleC
+/scripts/06_*.py                          @handleC
+/tests/fixtures/synth_features.py         @handleC
+/tests/test_metrics.py                    @handleC
+/tests/test_leakage_checks.py             @handleC
+/tests/test_models_normalisation.py       @handleC
+/tests/test_loso.py                       @handleC
+/docs/baseline_report.md                  @handleC
+/results/tables/                          @handleC
+/results/figures/                         @handleC
