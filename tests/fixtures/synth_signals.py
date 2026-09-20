@@ -9,7 +9,7 @@ Guarantees of :func:`make_synthetic_project` (all covered by ``tests/test_synth_
 * the first file of every case is seizure-free (calibration file);
 * patient ``chb01`` consists of TWO cases (``chb01`` and ``chb21``), like the real dataset;
 * ``file_order`` is a chronological rank *within patient* (unique across that patient's cases);
-* patients differ in spectral colour (AR(1) coefficient) and gain, mimicking inter-subject variability;
+* patients differ in spectral colour (AR(1) coefficient) and gain (inter-subject variability);
 * everything is written under ``root`` (nothing leaks into the current directory).
 """
 

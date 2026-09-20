@@ -1,38 +1,40 @@
-.PHONY: setup test lint clean all integration 01_download 02_preprocess 03_windows 04_features 05_baseline 06_report
+# Milestone 1 pipeline. On Windows run this in WSL/Git Bash, or run the python commands directly.
+PYTHON ?= python
+
+.PHONY: setup test lint download preprocess windows features baseline report all integration filter-plot
 
 setup:
-	pip install -r requirements.txt
-	pip install -e .
+	$(PYTHON) -m pip install -r requirements.txt
+	$(PYTHON) -m pip install -e .
 
 test:
-	pytest -q
-
-integration:
-	pytest -q -m integration
+	$(PYTHON) -m pytest -q -m "not integration and not needs_data"
 
 lint:
-	ruff check .
+	ruff check src tests scripts
 
-clean:
-	find . -type d -name "__pycache__" -exec rm -rf {} +
-	find . -type d -name ".pytest_cache" -exec rm -rf {} +
+download:            # member A
+	$(PYTHON) scripts/01_download_and_index.py
 
-all: 01_download 02_preprocess 03_windows 04_features 05_baseline 06_report
+preprocess:          # member A
+	$(PYTHON) scripts/02_preprocess.py
 
-01_download:
-	python scripts/01_download_and_index.py
+windows:             # member B
+	$(PYTHON) scripts/03_make_windows.py
 
-02_preprocess:
-	python scripts/02_preprocess.py
+features:            # member B
+	$(PYTHON) scripts/04_extract_features.py
 
-03_windows:
-	python scripts/03_make_windows.py
+baseline:            # member C
+	$(PYTHON) scripts/05_run_baseline.py
 
-04_features:
-	python scripts/04_extract_features.py
+report:              # member C
+	$(PYTHON) scripts/06_make_report.py
 
-05_baseline:
-	python scripts/05_run_baseline.py
+all: download preprocess windows features baseline report
 
-06_report:
-	python scripts/06_make_report.py
+integration:
+	$(PYTHON) -m pytest -q -m integration
+
+filter-plot:         # member A: regenerate docs/figures/A_fir_response.png
+	$(PYTHON) -m eegpipe.preprocessing.filters

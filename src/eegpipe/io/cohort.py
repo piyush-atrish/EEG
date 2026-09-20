@@ -183,18 +183,25 @@ def select_cohort(
 def validate_cohort(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
     """Final consistency pass. Returns ``(cohort, warnings)``.
 
-    A patient whose included files contain no seizure (for instance because every seizure file
-    turned out to be unusable) is excluded entirely with ``no_seizure_patient``.
+    * A patient that *has* seizure files but none of them is usable (download failure,
+      missing channel...) is reported as data loss: ``"<patient>: no usable seizure file"``.
+      Such a patient is excluded entirely, since it could not contribute a positive class.
+    * A patient that never had a seizure file (for example chb03 in the fake tree) is simply
+      excluded without a warning.
     """
     df = df.copy()
     warnings: list[str] = []
     for patient, pdf in df.groupby("patient", sort=False):
+        has_seizure_files = (pdf["role"] == "seizure").any()
         included = pdf[pdf["include"]]
-        if included.empty:
-            continue
-        if not (included["role"] == "seizure").any():
+        included_seizure = (included["role"] == "seizure").any()
+        if has_seizure_files and not included_seizure:
             _set_included(df, included.index, False, "no_seizure_patient")
+            df.loc[pdf.index[~pdf["include"] & (pdf["exclude_reason"] == "over_cap")],
+                   "exclude_reason"] = "no_seizure_patient"
             warnings.append(f"{patient}: no usable seizure file, patient excluded")
+        elif included.empty:
+            continue
         elif not (included["role"] == "seizure_free").any():
             warnings.append(f"{patient}: no seizure-free file included (calibration is short)")
     return df, warnings

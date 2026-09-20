@@ -1,25 +1,24 @@
 project:
   seed: 42
-  n_jobs: 4
+  n_jobs: -1                      # joblib workers (parallelism happens at case/file level only)
 
-paths:
-  raw: "data/raw/chbmit"
-  interim: "data/interim"
-  preprocessed: "data/interim/preprocessed"
-  windows: "data/interim/windows"
-  features: "data/processed/features"
-  predictions: "results/predictions"
-  tables: "docs/tables"
-  figures: "docs/figures"
-  logs: "results/logs"
+paths:                            # relative to repo root; tests override these with temp dirs
+  raw: data/raw/chbmit
+  interim: data/interim
+  preprocessed: data/interim/preprocessed
+  windows: data/processed/windows
+  features: data/processed/features
+  predictions: results/predictions
+  tables: results/tables
+  figures: results/figures
+  logs: results/logs
 
 dataset:
-  physionet_db: "chbmit"
+  name: chb-mit
+  physionet_db: chbmit
   fs: 256
-  max_seizure_free_hours_per_patient: 2.0
-  patient_map:
-    chb21: "chb01"
-  channels:
+  patient_map: {chb21: chb01}     # same patient, recorded 1.5 years later
+  channels:                       # 18 common bipolar channels, FIXED ORDER
     - FP1-F7
     - F7-T7
     - T7-P7
@@ -38,25 +37,51 @@ dataset:
     - P8-O2
     - FZ-CZ
     - CZ-PZ
-  channel_aliases:
-    "T8-P8-0": "T8-P8"
+  channel_aliases:                # raw EDF name -> canonical name (extend after inspecting real files)
+    T8-P8-0: T8-P8
+  max_seizure_free_hours_per_patient: 2.0   # includes each case's first (calibration) file
 
 preprocessing:
   notch_hz: 60.0
   notch_q: 30.0
   bandpass_hz: [0.5, 45.0]
   fir:
-    window: "kaiser"
-    ripple_db: 60.0
-    transition_hz: 1.0
+    window: kaiser
+    ripple_db: 60.0               # stop-band attenuation used with scipy.signal.kaiserord
+    transition_hz: 1.0            # numtaps and beta are derived; expect roughly 900-1000 taps
 
 segmentation:
   window_s: 4.0
-  stride_s: 1.0
+  overlap: 0.5                    # step = window_s * (1 - overlap) = 2 s
+  drop_boundary_windows: true
 
 features:
-  wavelet: "db4"
-  levels: 4
+  welch: {nperseg_s: 1.0, noverlap_frac: 0.5}
+  bands: {delta: [0.5, 4.0], theta: [4.0, 8.0], alpha: [8.0, 13.0], beta: [13.0, 30.0], gamma: [30.0, 45.0]}
+  entropy: {enabled: true, m: 2, r_factor: 0.2, decimate: 2}   # computed on the window decimated by 2 (128 Hz)
+  wavelet: {name: db4, level: 5}
+  dtype: float32
+  catalog:                        # per-channel features, FIXED ORDER (32 per channel)
+    time: [mean, std, skew, kurt, line_length, hjorth_activity, hjorth_mobility, hjorth_complexity]
+    frequency: [logpow_delta, logpow_theta, logpow_alpha, logpow_beta, logpow_gamma,
+                rel_delta, rel_theta, rel_alpha, rel_beta, rel_gamma]
+    nonlinear: [sampen, apen]
+    wavelet: [dwt_logE_d1, dwt_logE_d2, dwt_logE_d3, dwt_logE_d4, dwt_logE_d5, dwt_logE_a5,
+              dwt_std_d1, dwt_std_d2, dwt_std_d3, dwt_std_d4, dwt_std_d5, dwt_std_a5]
 
 evaluation:
-  cv_strategy: "loso"
+  arms: [raw, subject_standardised]
+  models: [svm, rf]
+  calibration: {minutes: 10, min_windows: 60}        # Arm 1 (and calibration exclusion in both arms)
+  train_sampling: {interictal_to_ictal_ratio: 5, max_train_windows: 30000}
+  feature_selection: {method: f_classif, k: 100}     # SelectKBest inside the Pipeline
+  tuning:
+    mode: nested                  # nested | fixed  (fixed = fallback when compute is short)
+    inner_splits: 3               # GroupKFold by patient inside the training patients
+    scoring: roc_auc
+  grids:
+    svm: {C: [1, 10], gamma: [scale]}
+    rf: {n_estimators: [200], max_depth: [null, 20], min_samples_leaf: [1, 5]}
+  fixed_params:                   # used when tuning.mode == fixed
+    svm: {C: 1, gamma: scale}
+    rf: {n_estimators: 200, max_depth: null, min_samples_leaf: 1}

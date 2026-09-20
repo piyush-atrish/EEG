@@ -7,6 +7,7 @@ order, so channels are always selected **by name** and returned in the configure
 
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 
 import mne
@@ -21,12 +22,21 @@ class ChannelMissingError(Exception):
     """A required channel is not present in an EDF file."""
 
 
+def _read_raw(edf_path: str | Path):
+    """Lazy MNE read. Silences only the two expected header warnings (handled deliberately):
+    duplicate channel labels (renamed to ``-0``/``-1`` by MNE) and missing measurement date."""
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="Channel names are not unique")
+        warnings.filterwarnings("ignore", message="Invalid measurement date")
+        return mne.io.read_raw_edf(edf_path, preload=False, verbose=False)
+
+
 def read_edf_header(edf_path: str | Path) -> dict:
     """Read duration and channel names without loading the signal.
 
     ``n_samples`` comes from ``raw.n_times`` (``raw.times[-1]`` would be one sample short).
     """
-    raw = mne.io.read_raw_edf(edf_path, preload=False, verbose=False)
+    raw = _read_raw(edf_path)
     sfreq = float(raw.info["sfreq"])
     return {
         "n_samples": int(raw.n_times),
@@ -105,7 +115,7 @@ def load_edf_channels(
 
     Returns ``(data, fs)`` with ``data`` of shape ``(len(channels), n_samples)``.
     """
-    raw = mne.io.read_raw_edf(edf_path, preload=False, verbose=False)
+    raw = _read_raw(edf_path)
     fs = float(raw.info["sfreq"])
     if abs(fs - fs_expected) > 1e-6:
         raise ValueError(f"Expected fs={fs_expected}, got {fs} in {Path(str(edf_path)).name}")

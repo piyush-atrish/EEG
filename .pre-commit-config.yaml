@@ -1,5 +1,9 @@
 repos:
--   repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.1.14'
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
     hooks:
-    - id: ruff
+      - id: ruff
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.7.1
+    hooks:
+      - id: nbstripout

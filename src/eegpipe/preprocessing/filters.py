@@ -19,6 +19,8 @@ from pathlib import Path
 import numpy as np
 from scipy import signal
 
+_GAIN_POINTS_HZ = (0.0, 0.25, 0.5, 0.75, 1.0, 10.0, 44.5, 45.0, 45.5, 46.0, 60.0)
+
 
 def design_bandpass_fir(
     fs: float, low: float, high: float, ripple_db: float, transition_hz: float
@@ -83,7 +85,7 @@ def filter_summary(fs: float, cfg: dict) -> dict:
     return {
         "numtaps": len(h),
         "group_delay_s": (len(h) - 1) / 2.0 / fs,
-        "gain_db": {f: gain(f) for f in (0.0, 0.25, 0.5, 0.75, 1.0, 10.0, 44.5, 45.0, 45.5, 46.0, 60.0)},
+        "gain_db": {f: gain(f) for f in _GAIN_POINTS_HZ},
         "passband_ripple_db": float(np.max(np.abs(mag[(w >= 2.0) & (w <= 43.0)]))),
         "worst_stopband_above_46hz_db": float(np.max(mag[w >= 46.0])),
     }
