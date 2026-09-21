@@ -1,1 +1,1 @@
-"""eegpipe.evaluation subpackage (intentionally empty: import from the modules directly)."""
+"""Member C: LOSO evaluation, metrics, leakage guards and reporting."""
