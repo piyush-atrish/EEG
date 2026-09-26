@@ -1,8 +1,0 @@
-diff a/src/eegpipe/utils/logging_utils.py b/src/eegpipe/utils/logging_utils.py	(rejected hunks)
-@@ -31,4 +31,4 @@ def get_logger(name: str, log_file: str | Path | None = None) -> logging.Logger:
-             fh = logging.FileHandler(log_file)
-             fh.setFormatter(logging.Formatter(_FORMAT))
-             logger.addHandler(fh)
--    return logger
-\ No newline at end of file
-+    return logger

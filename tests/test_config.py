@@ -21,6 +21,11 @@ def test_default_config_is_the_frozen_contract(repo_cfg):
         assert key in repo_cfg["paths"]
     assert "max_seizure_free_hours_per_patient" in repo_cfg["dataset"]
     assert len(repo_cfg["dataset"]["channels"]) == 18
+    for key in ("arms", "models", "calibration", "train_sampling", "feature_selection",
+                "tuning", "grids", "fixed_params"):
+        assert key in repo_cfg["evaluation"], f"evaluation.{key} missing (Member C reads this)"
+    assert set(repo_cfg["evaluation"]["arms"]) == {"raw", "subject_standardised"}
+    assert set(repo_cfg["evaluation"]["models"]) == {"svm", "rf"}
 
 
 def test_paths_resolved_against_repo_root(repo_cfg):
