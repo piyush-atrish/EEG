@@ -43,11 +43,45 @@ def test_full_chain_on_synthetic_project(synthetic_project, tmp_path, write_cfg,
     assert len(cols) == 576 and np.isfinite(feats[cols].to_numpy()).all()
     assert len(feats) == len(windows) and set(feats["patient"]) == set(synthetic_project["patients"])
 
-    # ---- Member C (skipped until implemented) ----
-    for stage, extra in (("05_run_baseline", ["--tuning", "fixed", "--max-patients", "3"]),
-                         ("06_make_report", [])):
-        try:
-            rc = load_script(stage).main(arg + extra)
-        except NotImplementedError:
-            pytest.skip(f"{stage} is still a stub")
-        assert rc in (0, None)
+    # ---- Member C: contracts C6 and C7 ----
+    assert load_script("05_run_baseline").main(
+        arg + ["--tuning", "fixed", "--max-patients", "3"]
+    ) in (0, None)
+
+    arms = cfg["evaluation"]["arms"]
+    models = cfg["evaluation"]["models"]
+    baseline_patients = set(sorted(feats["patient"].unique())[:3])
+
+    for arm in arms:
+        for model in models:
+            pred_path = Path(cfg["paths"]["predictions"]) / f"{arm}__{model}.parquet"
+            assert pred_path.exists(), pred_path
+            preds = pd.read_parquet(pred_path)
+            assert list(preds.columns) == [
+                "patient", "case", "file", "start_sample",
+                "y_true", "y_score", "y_pred", "arm", "model",
+            ]
+            assert set(preds["patient"]) <= baseline_patients
+            assert set(preds["y_true"]) <= {0, 1} and set(preds["y_pred"]) <= {0, 1}
+            assert np.isfinite(preds["y_score"].to_numpy()).all()
+            assert (preds["arm"] == arm).all() and (preds["model"] == model).all()
+
+            table_path = Path(cfg["paths"]["tables"]) / f"per_patient_{arm}__{model}.csv"
+            assert table_path.exists(), table_path
+            per_patient = pd.read_csv(table_path)
+            assert list(per_patient.columns) == [
+                "patient", "n_windows", "n_ictal", "tp", "fp", "tn", "fn",
+                "sensitivity", "specificity", "f1", "auc", "fa_per_hour",
+            ]
+            assert set(per_patient["patient"]) <= baseline_patients
+
+    assert load_script("06_make_report").main(arg) in (0, None)
+
+    summary_path = Path(cfg["paths"]["tables"]) / "summary_all.csv"
+    assert summary_path.exists()
+    summary = pd.read_csv(summary_path)
+    assert list(summary.columns) == ["arm", "model", "metric", "mean", "std", "median", "n_patients"]
+    assert set(summary["arm"]) == set(arms) and set(summary["model"]) == set(models)
+
+    figures = sorted(Path(cfg["paths"]["figures"]).glob("*.png"))
+    assert len(figures) == len(models) * 3  # sensitivity, specificity, auc per model
