@@ -1,6 +1,6 @@
 """Feature runner: assembles the four feature groups into Contract C5.
 
-Member B, Step 9. `feature_names`/`extract_window_features`/
+Step 9. `feature_names`/`extract_window_features`/
 `extract_batch_features` are pure numeric functions (no I/O, no logging,
 no non-finite handling) so they stay trivially testable and so
 "batch equals per-window" is a meaningful check with no side effects to

@@ -1,4 +1,4 @@
-"""Tests for evaluation/metrics.py (Member C, Step 10)."""
+"""Tests for evaluation/metrics.py (Step 10)."""
 
 import math
 

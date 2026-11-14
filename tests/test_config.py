@@ -23,7 +23,7 @@ def test_default_config_is_the_frozen_contract(repo_cfg):
     assert len(repo_cfg["dataset"]["channels"]) == 18
     for key in ("arms", "models", "calibration", "train_sampling", "feature_selection",
                 "tuning", "grids", "fixed_params"):
-        assert key in repo_cfg["evaluation"], f"evaluation.{key} missing (Member C reads this)"
+        assert key in repo_cfg["evaluation"], f"evaluation.{key} missing (the evaluation code reads this)"
     assert set(repo_cfg["evaluation"]["arms"]) == {"raw", "subject_standardised"}
     assert set(repo_cfg["evaluation"]["models"]) == {"svm", "rf"}
 

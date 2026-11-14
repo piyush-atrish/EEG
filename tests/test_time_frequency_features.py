@@ -1,4 +1,4 @@
-"""Tests for eegpipe.features.time_domain and .frequency_domain (Member B, Step 7).
+"""Tests for eegpipe.features.time_domain and .frequency_domain (Step 7).
 
 Tolerances below are set from values verified by direct numeric probing
 during development (see PR description), not guessed.

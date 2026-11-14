@@ -1,6 +1,6 @@
 """Windowing and labelling of preprocessed EEG recordings (Contract C4).
 
-Member B, Step 6. Converts each included, preprocessed recording (Contract C3)
+Step 6. Converts each included, preprocessed recording (Contract C3)
 into fixed-length, overlapping windows labelled against the seizure
 annotations (Contract C1), producing one row per window (Contract C4).
 

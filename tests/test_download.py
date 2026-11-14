@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from unittest.mock import patch
 
@@ -37,87 +38,73 @@ def no_sleep():
         yield
 
 
-def _wfdb_writes(payload=b"edf-bytes"):
-    def fake(db, dl_dir, files, keep_subdirs=True, overwrite=False):
-        for rel in files:
-            target = Path(dl_dir) / rel
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(payload)
-    return fake
-
-
-def test_wfdb_success_is_atomic_and_cleans_up(cfg):
-    with patch.object(dl.wfdb, "dl_files", side_effect=_wfdb_writes()):
+def test_https_success_is_atomic_and_cleans_up(cfg):
+    resp = FakeResp(b"edf-bytes", content_length=9)
+    with patch.object(dl.requests, "get", return_value=resp):
         assert dl.fetch_file(cfg, "chb01/chb01_01.edf")
     raw = Path(cfg["paths"]["raw"])
     assert (raw / "chb01" / "chb01_01.edf").read_bytes() == b"edf-bytes"
-    assert not list((raw / ".partial").glob("*"))          # temp dirs removed
+    assert not list((raw / ".partial").glob("*"))  # temp dirs removed
 
 
 def test_existing_nonempty_file_is_not_downloaded_again(cfg):
     target = Path(cfg["paths"]["raw"]) / "chb01" / "a.edf"
     target.parent.mkdir(parents=True)
     target.write_bytes(b"data")
-    with patch.object(dl.wfdb, "dl_files") as m:
+    with patch.object(dl.requests, "get") as get:
         assert dl.fetch_file(cfg, "chb01/a.edf")
-    m.assert_not_called()
+    get.assert_not_called()
 
 
 def test_empty_existing_file_is_redownloaded(cfg):
     target = Path(cfg["paths"]["raw"]) / "chb01" / "a.edf"
     target.parent.mkdir(parents=True)
     target.write_bytes(b"")
-    with patch.object(dl.wfdb, "dl_files", side_effect=_wfdb_writes(b"fresh")):
+    with patch.object(dl.requests, "get", return_value=FakeResp(b"fresh", content_length=5)):
         assert dl.fetch_file(cfg, "chb01/a.edf")
     assert target.read_bytes() == b"fresh"
 
 
-def test_falls_back_to_https_when_wfdb_raises(cfg):
-    with patch.object(dl.wfdb, "dl_files", side_effect=RuntimeError("boom")), \
-         patch.object(dl.requests, "get", return_value=FakeResp(b"y" * 10, content_length=10)):
-        assert dl.fetch_file(cfg, "chb01/b.edf")
-    assert (Path(cfg["paths"]["raw"]) / "chb01" / "b.edf").read_bytes() == b"y" * 10
-
-
-def test_wfdb_silent_success_without_file_is_a_failure(cfg):
-    """wfdb returning normally must not be trusted: the file has to exist afterwards."""
-    with patch.object(dl.wfdb, "dl_files", return_value=None), \
-         patch.object(dl.requests, "get", return_value=FakeResp(status=404)):
+def test_http_error_fails_after_all_retries(cfg):
+    with patch.object(dl.requests, "get", return_value=FakeResp(status=404)) as get:
         assert not dl.fetch_file(cfg, "chb01/c.edf", retries=2)
+    assert get.call_count == 2
     assert not (Path(cfg["paths"]["raw"]) / "chb01" / "c.edf").exists()
 
 
-def test_incomplete_https_download_is_rejected(cfg):
-    with patch.object(dl.wfdb, "dl_files", side_effect=RuntimeError("boom")), \
-         patch.object(dl.requests, "get", return_value=FakeResp(b"y" * 10, content_length=999)):
+def test_incomplete_download_is_rejected(cfg):
+    with patch.object(dl.requests, "get", return_value=FakeResp(b"y" * 10, content_length=999)):
         assert not dl.fetch_file(cfg, "chb01/d.edf", retries=1)
     assert not (Path(cfg["paths"]["raw"]) / "chb01" / "d.edf").exists()
 
 
 def test_retries_then_succeeds(cfg):
-    calls = {"n": 0}
-
-    def flaky(db, dl_dir, files, keep_subdirs=True, overwrite=False):
-        calls["n"] += 1
-        if calls["n"] < 3:
-            raise RuntimeError("temporary")
-        _wfdb_writes()(db, dl_dir, files)
-
-    with patch.object(dl.wfdb, "dl_files", side_effect=flaky), \
-         patch.object(dl.requests, "get", return_value=FakeResp(status=500)):
+    responses = [FakeResp(status=500), FakeResp(status=500), FakeResp(b"ok", content_length=2)]
+    with patch.object(dl.requests, "get", side_effect=responses) as get:
         assert dl.fetch_file(cfg, "chb01/e.edf", retries=3)
+    assert get.call_count == 3
+    assert (Path(cfg["paths"]["raw"]) / "chb01" / "e.edf").read_bytes() == b"ok"
 
 
 def test_download_edfs_reports_ok_and_failed(cfg):
-    def selective(db, dl_dir, files, keep_subdirs=True, overwrite=False):
-        if "bad" in files[0]:
-            raise RuntimeError("nope")
-        _wfdb_writes()(db, dl_dir, files)
+    def selective(url, **kwargs):
+        if "bad" in url:
+            return FakeResp(status=404)
+        return FakeResp(b"good", content_length=4)
 
-    with patch.object(dl.wfdb, "dl_files", side_effect=selective), \
-         patch.object(dl.requests, "get", return_value=FakeResp(status=404)):
+    with patch.object(dl.requests, "get", side_effect=selective):
         res = dl.download_edfs(cfg, ["chb01/good.edf", "chb01/bad.edf"], max_workers=2)
     assert res["ok"] == ["chb01/good.edf"] and res["failed"] == ["chb01/bad.edf"]
+
+
+def test_progress_is_logged_per_file_and_per_step(cfg, caplog):
+    with patch.object(dl, "PROGRESS_STEP", 5), patch.object(
+        dl.requests, "get", return_value=FakeResp(b"z" * 20, content_length=20)
+    ), caplog.at_level(logging.INFO, logger="eegpipe.io.download"):
+        dl.download_edfs(cfg, ["chb01/p.edf"], max_workers=1)
+    text = caplog.text
+    assert "[1/1] OK" in text and "chb01/p.edf" in text
+    assert "p.edf: 0 / 0 MB" in text or "p.edf:" in text  # byte-progress line was emitted
 
 
 def test_metadata_file_list(cfg):

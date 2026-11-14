@@ -1,4 +1,4 @@
-"""Classifier pipelines (owner: Member C, Step 11)."""
+"""Classifier pipelines (Step 11)."""
 
 from __future__ import annotations
 

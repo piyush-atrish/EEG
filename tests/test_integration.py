@@ -31,7 +31,7 @@ def test_full_chain_on_synthetic_project(synthetic_project, tmp_path, write_cfg,
     cfg = synthetic_project["cfg"]
     arg = ["--config", str(write_cfg(cfg, tmp_path / "cfg.yaml"))]
 
-    # ---- Member B: contracts C4 and C5 ----
+    # ---- Features: contracts C4 and C5 ----
     assert load_script("03_make_windows").main(arg) in (0, None)
     windows = pd.concat(pd.read_parquet(p) for p in sorted(Path(cfg["paths"]["windows"]).glob("*.parquet")))
     assert list(windows.columns) == ["patient", "case", "file", "start_sample", "t_start_s", "label"]
@@ -43,7 +43,7 @@ def test_full_chain_on_synthetic_project(synthetic_project, tmp_path, write_cfg,
     assert len(cols) == 576 and np.isfinite(feats[cols].to_numpy()).all()
     assert len(feats) == len(windows) and set(feats["patient"]) == set(synthetic_project["patients"])
 
-    # ---- Member C: contracts C6 and C7 ----
+    # ---- Evaluation: contracts C6 and C7 ----
     assert load_script("05_run_baseline").main(
         arg + ["--tuning", "fixed", "--max-patients", "3"]
     ) in (0, None)

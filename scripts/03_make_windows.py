@@ -1,4 +1,4 @@
-"""CLI: build Contract C4 window tables for the cohort (Member B, Step 6).
+"""CLI: build Contract C4 window tables for the cohort (Step 6).
 
 Usage
 -----

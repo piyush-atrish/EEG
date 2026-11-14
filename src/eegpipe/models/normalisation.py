@@ -1,4 +1,4 @@
-"""Calibration marking and per-patient standardisation (owner: Member C, Step 12)."""
+"""Calibration marking and per-patient standardisation (Step 12)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-# Filter validation (Member A, Step 4)
+# Filter validation (Step 4)
 
 Pre-processing = 60 Hz IIR notch (zero-phase `filtfilt`) followed by a 0.5-45 Hz linear-phase
 Kaiser-window FIR band-pass. Everything below is *measured* by

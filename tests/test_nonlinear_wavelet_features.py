@@ -1,4 +1,4 @@
-"""Tests for eegpipe.features.nonlinear and .wavelet (Member B, Step 8).
+"""Tests for eegpipe.features.nonlinear and .wavelet (Step 8).
 
 Tolerances and expected sub-band mappings are taken from values verified
 by direct numeric probing during development, not guessed.

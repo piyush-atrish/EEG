@@ -1,6 +1,6 @@
 """Time-domain features (Contract C5, `catalog.time`).
 
-Member B, Step 7. All functions are fully vectorised over `axis=-1`: the
+Step 7. All functions are fully vectorised over `axis=-1`: the
 same code path handles a single window `(n_ch, n_samples)` and a batch
 `(n_win, n_ch, n_samples)` (or any other leading-dimension shape) with no
 Python-level loop over windows.

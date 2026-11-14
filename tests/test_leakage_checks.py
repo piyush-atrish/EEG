@@ -1,4 +1,4 @@
-"""Tests for evaluation/leakage_checks.py and the Step 10 LOSO loop (Member C)."""
+"""Tests for evaluation/leakage_checks.py and the Step 10 LOSO loop."""
 
 import numpy as np
 import pandas as pd

@@ -1,12 +1,12 @@
-"""Synthetic Contract-C5 (feature table) generator for Member C's own tests.
+"""Synthetic Contract-C5 (feature table) generator for the evaluation module's own tests.
 
 Everything downstream in ``evaluation/`` and ``models/`` can be developed and tested against
-this before Member B's real feature parquet files exist (see the project dependency graph:
+this before the feature module's real feature parquet files exist (see the project dependency graph:
 C: Step 10 -> Step 11 -> Step 12, synthetic features until B delivers).
 
 Feature names are built locally from ``cfg["features"]["catalog"]`` and
 ``cfg["dataset"]["channels"]`` (the exact ``f_{feature}_{channel_slug}`` naming rule from
-Contract C5, README Section 7) -- this file never imports Member B's ``features.extract``.
+Contract C5, README Section 7) -- this file never imports the feature module's ``features.extract``.
 
 Guarantees of :func:`make_synthetic_features`:
 
@@ -41,7 +41,7 @@ def _feature_columns(cfg: dict) -> list[str]:
     """Build the Contract-C5 feature column names locally (catalog order, then channel order).
 
     Mirrors the naming rule in README Section 7 (C5) and Step 9 (``feature_names``), but is a
-    self-contained implementation: Member C's tests must not depend on Member B's code.
+    self-contained implementation: the evaluation module's tests must not depend on the feature module's code.
     """
     catalog = cfg["features"]["catalog"]
     entropy_enabled = cfg["features"].get("entropy", {}).get("enabled", True)

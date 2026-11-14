@@ -1,4 +1,4 @@
-"""Window-level metrics (owner: Member C, Step 10). Contract C7."""
+"""Window-level metrics (Step 10). Contract C7."""
 
 from __future__ import annotations
 

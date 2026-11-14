@@ -1,4 +1,4 @@
-# Data notes (Member A)
+# Data notes
 
 Keep this file current: it is the record of every data surprise and every decision about which
 files are in the cohort. Items marked **FILL** need numbers from your own machine after a run.

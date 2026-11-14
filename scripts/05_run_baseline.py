@@ -1,4 +1,4 @@
-"""CLI: run the LOSO baseline for each arm x model combination (Member C, Step 12).
+"""CLI: run the LOSO baseline for each arm x model combination (Step 12).
 
 Usage
 -----

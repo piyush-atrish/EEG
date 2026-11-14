@@ -6,7 +6,7 @@ per Contract C3), giving 18 channels × 32 features = **576** columns named `f_{
 (30 features / 540 columns if `features.entropy.enabled: false`; see Section 12.3's fallback ladder).
 
 > **Status: real findings from the first data slice** (`chb01`, `chb02`, `chb21`→`chb01`;
-> `python check_feature_sanity.py`, 26,481 windows, **387 ictal / 26,094 interictal**). The "Expected
+> `python tools/check_feature_sanity.py`, 26,481 windows, **387 ictal / 26,094 interictal**). The "Expected
 > during seizure" column below states what was actually observed, channel-averaged, on this slice —
 > not a literature guess anymore. **Caveats that still apply:** only 2 distinct patients, only 387
 > ictal windows total, no per-patient or per-channel breakdown, no significance testing — treat

@@ -1,4 +1,4 @@
-"""Leave-one-subject-out loop, sampling and tuning (owner: Member C, Steps 10-11).
+"""Leave-one-subject-out loop, sampling and tuning (Steps 10-11).
 
 `run_loso` is the harness; `subsample_training` and `tune_model` are the two pieces Step 11
 adds (Step 10 used a hardcoded fixed model, now replaced by `models.classifiers.make_model`).
@@ -115,7 +115,10 @@ def tune_model(pipe: Pipeline, grid: dict, X, y, groups, cfg: dict, seed: int):
     `mode == "nested"`: `GridSearchCV` over `grid`, with `GroupKFold` on `groups` (the training
     windows' patient ids) so a hyperparameter is never chosen using a fold that contains a
     window from the same patient it's validated on (leakage rule L4). `inner_splits` is capped
-    at the number of distinct training patients, so this can't ask for more folds than groups.
+    at the number of distinct training patients. If fewer than 2 training patients are
+    available at all (a tiny cohort, or a restricted diagnostic run), `GroupKFold` cannot form
+    even one split; this automatically falls back to `mode == "fixed"` for that fold, with a
+    warning, rather than crashing.
 
     `mode == "fixed"`: skip the search and set `cfg["evaluation"]["fixed_params"][name]`
     directly (the fallback when nested tuning is too slow; `name` is read off the pipeline's
@@ -128,13 +131,17 @@ def tune_model(pipe: Pipeline, grid: dict, X, y, groups, cfg: dict, seed: int):
     mode = cfg["evaluation"]["tuning"]["mode"]
 
     if mode == "fixed":
-        name = "svm" if isinstance(pipe.named_steps["clf"], SVC) else "rf"
-        pipe.named_steps["clf"].set_params(**cfg["evaluation"]["fixed_params"][name])
-        pipe.fit(X, y)
-        return pipe
+        return _fit_fixed(pipe, cfg, X, y)
 
     if mode == "nested":
         n_groups = len(np.unique(groups))
+        if n_groups < 2:
+            logger.warning(
+                "Only %d training patient(s) available; nested tuning needs >= 2 for "
+                "GroupKFold. Falling back to fixed params for this fold.",
+                n_groups,
+            )
+            return _fit_fixed(pipe, cfg, X, y)
         inner_splits = min(cfg["evaluation"]["tuning"]["inner_splits"], n_groups)
         cv = GroupKFold(n_splits=inner_splits)
         search = GridSearchCV(pipe, grid, cv=cv, scoring=cfg["evaluation"]["tuning"]["scoring"], refit=True)
@@ -142,6 +149,13 @@ def tune_model(pipe: Pipeline, grid: dict, X, y, groups, cfg: dict, seed: int):
         return search.best_estimator_
 
     raise ValueError(f"Unknown evaluation.tuning.mode {mode!r}; expected 'nested' or 'fixed'")
+
+
+def _fit_fixed(pipe: Pipeline, cfg: dict, X, y) -> Pipeline:
+    name = "svm" if isinstance(pipe.named_steps["clf"], SVC) else "rf"
+    pipe.named_steps["clf"].set_params(**cfg["evaluation"]["fixed_params"][name])
+    pipe.fit(X, y)
+    return pipe
 
 
 def run_loso(

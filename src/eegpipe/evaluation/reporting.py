@@ -1,4 +1,4 @@
-"""Tables and figures (owner: Member C, Step 12). Contracts C6 and C7."""
+"""Tables and figures (Step 12). Contracts C6 and C7."""
 
 from __future__ import annotations
 

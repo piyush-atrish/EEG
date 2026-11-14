@@ -8,8 +8,8 @@ data/processed/features/{case}.parquet files and prints a summary table.
 
 Usage
 -----
-    python check_feature_sanity.py --config configs/config.yaml
-    python check_feature_sanity.py --config configs/config.yaml --cases chb01 chb02
+    python tools/check_feature_sanity.py --config configs/config.yaml
+    python tools/check_feature_sanity.py --config configs/config.yaml --cases chb01 chb02
 """
 from __future__ import annotations
 

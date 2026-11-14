@@ -1,5 +1,5 @@
 """CLI: build summary_all.csv and per-patient figures from saved baseline results
-(Member C, Step 12).
+(Step 12).
 
 Usage
 -----

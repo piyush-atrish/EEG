@@ -1,4 +1,4 @@
-"""CLI: extract Contract C5 features for the cohort, one process per case (Member B, Step 9).
+"""CLI: extract Contract C5 features for the cohort, one process per case (Step 9).
 
 Usage
 -----

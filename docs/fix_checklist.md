@@ -1,4 +1,4 @@
-# Member A: fix checklist (from the review of the agent output)
+# Fix checklist (from the review of the agent output)
 
 Legend: **VERIFIED** = covered by an automated test in this repo (92 tests, ruff clean);
 **YOUR MACHINE** = needs a run on real data or Windows that only you can do.
@@ -13,8 +13,7 @@ Legend: **VERIFIED** = covered by an automated test in this repo (92 tests, ruff
 - [x] Makefile with every README target (real tabs) - `make -n all` checked
 - [x] `.gitignore` tracks nested `.gitkeep`, ignores data/edf/npy/parquet/logs - checked in a fresh repo
 - [x] `requirements.txt` covers every import (scan: none missing); B and C blocks filled
-- [x] CI (`ci.yml`): ruff + unit + integration; PR template; CODEOWNERS per folder; pre-commit (ruff, nbstripout)
-- [ ] Replace `@handleA/@handleB/@handleC` in `.github/CODEOWNERS` with real GitHub usernames - YOUR MACHINE
+- [x] CI (`ci.yml`): ruff + unit + integration; PR template; pre-commit (ruff, nbstripout)
 - [ ] Pin exact versions in `requirements.txt` after `pip freeze` on your machine - YOUR MACHINE
 
 ## Data layer (Steps 2-3)

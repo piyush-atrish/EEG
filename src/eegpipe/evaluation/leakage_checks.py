@@ -1,4 +1,4 @@
-"""Automated leakage guards L1-L8 (owner: Member C, Step 10).
+"""Automated leakage guards L1-L8 (Step 10).
 
 Every check here protects the credibility of the whole project's baseline numbers. Each
 function raises `AssertionError` with a message naming exactly what leaked and how -- these

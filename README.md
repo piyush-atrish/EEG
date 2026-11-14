@@ -210,17 +210,17 @@ The evaluation maintains patient-level separation so that recordings from the sa
 
 ---
 
-# 3. Team Distribution
+# 3. Pipeline Modules
 
-The project is divided into three complementary modules.
+The pipeline is organised into three modules.
 
-| Member | Module | Main Responsibilities | Primary Outputs |
+| Stage | Module | Main Responsibilities | Primary Outputs |
 |---|---|---|---|
-| **User A** | Data & Preprocessing | Dataset acquisition, annotation parsing, channel selection, cohort construction, filtering and preprocessing | `annotations.csv`, `file_index.csv`, preprocessed EEG arrays |
-| **User B** | Windowing & Feature Engineering | EEG segmentation, seizure labelling, time/frequency features, nonlinear features and wavelet features | Window tables and feature tables |
-| **User C** | Evaluation & Baseline Models | LOSO evaluation, leakage checks, SVM, Random Forest, subject standardisation, metrics and reporting | Predictions, metric tables and figures |
+| **1** | Data & Preprocessing | Dataset acquisition, annotation parsing, channel selection, cohort construction, filtering and preprocessing | `annotations.csv`, `file_index.csv`, preprocessed EEG arrays |
+| **2** | Windowing & Feature Engineering | EEG segmentation, seizure labelling, time/frequency features, nonlinear features and wavelet features | Window tables and feature tables |
+| **3** | Evaluation & Baseline Models | LOSO evaluation, leakage checks, SVM, Random Forest, subject standardisation, metrics and reporting | Predictions, metric tables and figures |
 
-### User A — Data & Preprocessing
+### Module 1 — Data & Preprocessing
 
 Handles the complete upstream signal-processing pipeline:
 
@@ -238,7 +238,7 @@ Notch + FIR Filtering
 Preprocessed EEG
 ```
 
-### User B — Windowing & Features
+### Module 2 — Windowing & Features
 
 Converts preprocessed EEG into machine-learning inputs:
 
@@ -260,7 +260,7 @@ Wavelet Features
 Feature Matrix
 ```
 
-### User C — Evaluation & Models
+### Module 3 — Evaluation & Models
 
 Performs model training, cross-subject evaluation and result generation:
 
@@ -293,7 +293,6 @@ eeg-seizure-loso/
 ├── .pre-commit-config.yaml
 │
 ├── .github/
-│   ├── CODEOWNERS
 │   ├── pull_request_template.md
 │   └── workflows/
 │       └── ci.yml
@@ -422,14 +421,14 @@ eeg-seizure-loso/
 ### Module Mapping
 
 ```text
-src/eegpipe/io/             → User A
-src/eegpipe/preprocessing/  → User A
+src/eegpipe/io/             → Module 1
+src/eegpipe/preprocessing/  → Module 1
 
-src/eegpipe/segmentation/   → User B
-src/eegpipe/features/       → User B
+src/eegpipe/segmentation/   → Module 2
+src/eegpipe/features/       → Module 2
 
-src/eegpipe/models/         → User C
-src/eegpipe/evaluation/     → User C
+src/eegpipe/models/         → Module 3
+src/eegpipe/evaluation/     → Module 3
 ```
 
 ---

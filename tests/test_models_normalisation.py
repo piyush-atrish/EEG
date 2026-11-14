@@ -1,4 +1,4 @@
-"""Tests for models/normalisation.py (Member C, Step 12)."""
+"""Tests for models/normalisation.py (Step 12)."""
 
 import numpy as np
 import pandas as pd
@@ -82,15 +82,9 @@ def test_standardisation_uses_only_that_patients_own_data(df, feature_cols, cfg)
 
 
 def test_standardise_per_patient_handles_a_patient_with_no_calibration_windows(feature_cols, caplog):
-    df = pd.DataFrame(
-        {
-            "patient": ["p1", "p1"],
-            "is_calibration": [False, False],
-            feature_cols[0]: [1.0, 2.0],
-        }
-    )
-    for col in feature_cols[1:]:
-        df[col] = 0.0
+    values = {feature_cols[0]: [1.0, 2.0]}
+    values.update({col: [0.0, 0.0] for col in feature_cols[1:]})
+    df = pd.DataFrame({"patient": ["p1", "p1"], "is_calibration": [False, False], **values})
     out = standardise_per_patient(df, feature_cols)
     pd.testing.assert_frame_equal(out[feature_cols], df[feature_cols])
     assert "no calibration windows" in caplog.text
