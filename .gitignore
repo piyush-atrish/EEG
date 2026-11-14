@@ -1,6 +1,11 @@
-# --- Project data and generated artifacts (never commit) ---
-# Pattern note: "data/*" would block re-including nested .gitkeep files, so ignore
-# everything under data/ and then re-include directories and .gitkeep placeholders.
+# --- Project data and generated artifacts (configs/config.yaml -> paths.*) ---
+# Everything under data/ is generated or downloaded, never committed. results/predictions
+# and results/logs are also generated (git-ignored); results/tables and results/figures
+# ARE committed (Member C's Step 12 deliverables), so they must NOT be ignored here.
+#
+# Pattern note: a plain "data/" or "results/" line would make .gitkeep un-ignoring
+# impossible below, and would also block results/tables and results/figures. So:
+# ignore everything under data/, then re-include directories and .gitkeep placeholders.
 data/**
 !data/**/
 !data/**/.gitkeep
@@ -9,43 +14,12 @@ results/predictions/**
 results/logs/**
 !results/logs/.gitkeep
 
-# Safety net: raw and cached data must never be committed from anywhere
+# Safety net: raw and cached data must never be committed, wherever it ends up
 *.edf
 *.npy
 *.npz
 *.parquet
 *.h5
-
-# --- Python / tooling ---
-.venv/
-venv/
-__pycache__/
-*.pyc
-*.egg-info/
-.pytest_cache/
-.ruff_cache/
-.mypy_cache/
-.ipynb_checkpoints/
-.numba_cache/
-build/
-dist/
-.DS_Store
-caches/
-checkpoints/
-
-# --- Data & results (configs/config.yaml -> paths.*) ---
-# Everything under data/ and results/ is generated or downloaded, never
-# committed. `preprocessed`, `windows`, `features`, `predictions` in
-# particular can be tens of GB across the full cohort.
-data/
-data/**
-results/
-
-# Keep the directory structure itself under git even though it's empty
-# (handy so a fresh clone has the right skeleton without anyone having to
-# remember the exact paths) -- add a .gitkeep in each dir you want kept,
-# e.g. `data/raw/chbmit/.gitkeep`, and un-ignore just that file:
-!**/.gitkeep
 
 # --- Model / evaluation artifacts (Member C, Section evaluation.*) ---
 *.joblib
@@ -53,23 +27,23 @@ results/
 *.pickle
 
 # --- Python ---
+.venv/
+venv/
+env/
 __pycache__/
 *.py[cod]
 *.egg-info/
 *.egg
+.eggs/
 build/
 dist/
-.eggs/
 
 # numba's on-disk JIT cache (nonlinear.py: @njit(cache=True)) lands as
 # .nbi/.nbc files inside __pycache__, already covered above, but numba can
 # also use a top-level cache dir depending on version/config:
 .numba_cache/
-
-# --- Virtual environments ---
-.venv/
-venv/
-env/
+caches/
+checkpoints/
 
 # --- Test / lint / type-check caches ---
 .pytest_cache/

@@ -5,11 +5,11 @@ paths:
   raw: data/raw/chbmit
   interim: data/interim
   preprocessed: data/interim/preprocessed
-  windows: data/interim/windows
+  windows: data/processed/windows
   features: data/processed/features
   predictions: results/predictions
-  tables: docs/tables
-  figures: docs/figures
+  tables: results/tables
+  figures: results/figures
   logs: results/logs
 dataset:
   physionet_db: chbmit
@@ -119,4 +119,18 @@ features:
     - dwt_std_d5
     - dwt_std_a5
 evaluation:
-  cv_strategy: loso
+  arms: [raw, subject_standardised]
+  models: [svm, rf]
+  calibration: {minutes: 10, min_windows: 60}        # Arm 1 (and calibration exclusion in both arms)
+  train_sampling: {interictal_to_ictal_ratio: 5, max_train_windows: 30000}
+  feature_selection: {method: f_classif, k: 100}     # SelectKBest inside the Pipeline
+  tuning:
+    mode: nested                  # nested | fixed  (fixed = fallback when compute is short)
+    inner_splits: 3               # GroupKFold by patient inside the training patients
+    scoring: roc_auc
+  grids:
+    svm: {C: [1, 10], gamma: [scale]}
+    rf: {n_estimators: [200], max_depth: [null, 20], min_samples_leaf: [1, 5]}
+  fixed_params:                   # used when tuning.mode == fixed
+    svm: {C: 1, gamma: scale}
+    rf: {n_estimators: 200, max_depth: null, min_samples_leaf: 1}

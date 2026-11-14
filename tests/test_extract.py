@@ -1,7 +1,7 @@
-"""Tests for eegpipe.features.extract (Member B, Step 9).
+"""Tests for eegpipe.features.extract (Step 9).
 
-Uses a local synthetic fixture (not Member A's tests/fixtures/synth_signals.py,
-which is A's file to own) built directly on top of Member B's own Step 6
+Uses a local synthetic fixture (not tests/fixtures/synth_signals.py)
+built directly on top of the feature module's own Step 6
 (`build_window_table`) and Steps 7-8 feature functions, so this test
 exercises the real integration across all of B's own modules end to end.
 """
@@ -181,7 +181,7 @@ def synthetic_project(tmp_path: Path):
     }
 
     # Write via the same `preprocessed_path` helper that extract_case_features
-    # reads through, so this fixture stays correct regardless of Member A's
+    # reads through, so this fixture stays correct regardless of the data module's
     # actual on-disk layout convention (see test_windows.py's tiny_project
     # fixture, which applies the same principle for Step 6).
     from eegpipe.utils.paths import preprocessed_path

@@ -1,6 +1,6 @@
 """Frequency-domain features (Contract C5, `catalog.frequency`).
 
-Member B, Step 7. Welch PSD estimate (Hann window, `features.welch` config),
+Step 7. Welch PSD estimate (Hann window, `features.welch` config),
 band power via trapezoidal integration of the PSD over each band, then
 log and relative power per band. Vectorised over `axis=-1`: works for a
 single window `(n_ch, n_samples)` or a batch `(n_win, n_ch, n_samples)`.

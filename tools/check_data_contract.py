@@ -8,8 +8,8 @@ data/interim/ (see the README's frozen `paths` in configs/config.yaml).
 
 Usage
 -----
-    python check_data_contract.py --config configs/config.yaml
-    python check_data_contract.py --config configs/config.yaml --sample-n 6
+    python tools/check_data_contract.py --config configs/config.yaml
+    python tools/check_data_contract.py --config configs/config.yaml --sample-n 6
 """
 from __future__ import annotations
 

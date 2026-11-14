@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -34,6 +33,17 @@ def predictions_path(cfg: dict, arm: str, model: str) -> Path:
     return Path(cfg["paths"]["predictions"]) / f"{arm}__{model}.parquet"
 
 
+def per_patient_table_path(cfg: dict, arm: str, model: str) -> Path:
+    return Path(cfg["paths"]["tables"]) / f"per_patient_{arm}__{model}.csv"
+
+
+def summary_table_path(cfg: dict) -> Path:
+    return Path(cfg["paths"]["tables"]) / "summary_all.csv"
+
+
+def figure_path(cfg: dict, name: str) -> Path:
+    return Path(cfg["paths"]["figures"]) / name
+
+
 def preprocess_status_csv(cfg: dict) -> Path:
     return Path(cfg["paths"]["logs"]) / "preprocess_status.csv"
-

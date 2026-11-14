@@ -1,4 +1,4 @@
-"""Tests for eegpipe.segmentation.windows (Member B, Step 6).
+"""Tests for eegpipe.segmentation.windows (Step 6).
 
 Uses the frozen Milestone-1 settings (fs=256, window_s=4.0, overlap=0.5,
 so W=1024 samples, step=512 samples) throughout, and hand-computed
@@ -232,7 +232,7 @@ def test_empty_recording_returns_typed_empty_frame():
 
 
 # ---------------------------------------------------------------------------
-# build_window_table: local synthetic fixture (does not depend on Member A's
+# build_window_table: local synthetic fixture (does not depend on the data module's
 # tests/fixtures/synth_signals.py, which is A's own file to own/write)
 # ---------------------------------------------------------------------------
 
@@ -243,7 +243,7 @@ def tiny_project(tmp_path: Path):
 
     Writes the .npy arrays via the same `preprocessed_path` helper that
     `build_window_table` reads through, so this fixture stays correct
-    regardless of Member A's actual on-disk layout convention — it never
+    regardless of the data module's actual on-disk layout convention — it never
     assumes that layout independently.
     """
     from eegpipe.utils.paths import preprocessed_path
@@ -322,7 +322,7 @@ def test_build_window_table_excludes_non_included_files(tiny_project):
 
 
 def test_build_window_table_handles_int_include_column(tiny_project):
-    # Defends against Member A's file_index.csv encoding `include` as 0/1
+    # Defends against the data module's file_index.csv encoding `include` as 0/1
     # (int64, as pd.read_csv would infer) rather than True/False (bool).
     # Without explicit `.astype(bool)`, pandas' `.loc[int_array]` silently
     # does LABEL-based indexing instead of boolean masking -- a silent

@@ -1,6 +1,6 @@
 """Wavelet (DWT) features (Contract C5, `catalog.wavelet`).
 
-Member B, Step 8. 5-level `db4` DWT, log-energy and standard deviation per
+Step 8. 5-level `db4` DWT, log-energy and standard deviation per
 sub-band. Vectorised via `pywt.wavedec(..., axis=-1)` over the flattened
 leading dimensions (PyWavelets supports batched decomposition along one
 axis of an n-D array), so this handles a single window `(n_ch, n_samples)`

@@ -1,4 +1,4 @@
-"""Synthetic data generators for Member A's modules (and reused by B and C).
+"""Synthetic data generators for the data modules.
 
 Everything is written in the exact contract layout of the README (C1, C2, C3), so downstream
 code can be developed and tested without any real CHB-MIT data.

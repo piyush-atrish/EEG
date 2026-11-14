@@ -1,6 +1,6 @@
 """Nonlinear (entropy) features (Contract C5, `catalog.nonlinear`).
 
-Member B, Step 8. `sample_entropy`/`approximate_entropy` are 1-D numba
+Step 8. `sample_entropy`/`approximate_entropy` are 1-D numba
 kernels (no numba parallelism: parallelism lives at case level in Step 9,
 to avoid nesting parallel regions). `nonlinear_features` is the batched,
 config-driven wrapper that flattens arbitrary leading dimensions, decimates,
