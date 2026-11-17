@@ -1,0 +1,7 @@
+timestamp,model,seed,n_test_patients,n_patients_available,tuning_mode,auc,within_band
+2026-11-14T23:52:34,svm,0,3,5,nested,0.3981,True
+2026-11-14T23:53:39,svm,1,3,5,nested,0.5597,True
+2026-11-14T23:54:37,svm,2,3,5,nested,0.3993,True
+2026-11-14T23:57:26,rf,0,3,5,nested,0.557,True
+2026-11-15T00:00:18,rf,1,3,5,nested,0.6079,True
+2026-11-15T00:02:59,rf,2,3,5,nested,0.4526,True

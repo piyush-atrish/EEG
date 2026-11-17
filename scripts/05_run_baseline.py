@@ -1,4 +1,4 @@
-"""CLI: run the LOSO baseline for each arm x model combination (Step 12).
+"""CLI: run the LOSO baseline for each arm x model combination (Member C, Step 12).
 
 Usage
 -----
@@ -91,6 +91,8 @@ def main(argv: list[str] | None = None) -> int:
     assert_finite_features(df, feature_cols)
 
     logger.info("Baseline run: %d patient(s), arms=%s, models=%s", df["patient"].nunique(), arms, models)
+    logger.info("Tuning mode: %s (patients: %s)", cfg["evaluation"]["tuning"]["mode"],
+                ", ".join(sorted(df["patient"].unique())))
 
     for arm in arms:
         arm_df = apply_arm(df, arm, cfg)
