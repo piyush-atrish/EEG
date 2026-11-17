@@ -13,3 +13,11 @@ Short, dated record of design choices that the final report must state explicitl
   for debugging, never for reported numbers.
 - **Report:** state "nested, patient-grouped, 3 inner folds" in the methodology and check
   that the Milestone 1 numbers were produced with this mode before reusing them.
+
+  ## 2026-11-15 · Adaptive stage design approved
+
+- **Decision:** NLMS and RLS run as per-channel temporal predictors (output = prediction
+  error); a Kalman log-amplitude gain tracker is the third method. State is kept per case
+  and carried across files in time order, with a 60 s warm start. Settings are chosen on
+  chb01-chb05 only and frozen before scoring chb06 onwards.
+- **Details:** see docs/adaptive_design.md.
