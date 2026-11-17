@@ -215,19 +215,19 @@ def event_metrics_table(
         result = event_metrics(predictions, fs, window_s, step_s, **options)
         return pd.DataFrame([result.summary]), result.seizures
 
-    summary_rows, seizure_tables = [], []
+    summary_rows: list[dict] = []
+    seizure_rows: list[dict] = []
     for values, group in predictions.groupby(keys, sort=True):
         values = values if isinstance(values, tuple) else (values,)
         labels = dict(zip(keys, values))
         result = event_metrics(group, fs, window_s, step_s, **options)
         summary_rows.append({**labels, **result.summary})
-        if len(result.seizures):
-            seizure_tables.append(result.seizures.assign(**labels))
+        # plain records (not DataFrame concatenation) avoid dtype surprises with all-NaN latencies
+        seizure_rows.extend({**labels, **row} for row in result.seizures.to_dict("records"))
     summary = pd.DataFrame(summary_rows, columns=[*keys, *SUMMARY_COLUMNS])
-    seizures = (
-        pd.concat(seizure_tables, ignore_index=True)
-        if seizure_tables
-        else pd.DataFrame(columns=[*keys, "case", "file", "onset_sample", "end_sample",
-                                   "detected", "alarm_raise_sample", "latency_s"])
+    seizures = pd.DataFrame(
+        seizure_rows,
+        columns=[*keys, "case", "file", "onset_sample", "end_sample",
+                 "detected", "alarm_raise_sample", "latency_s"],
     )
     return summary, seizures

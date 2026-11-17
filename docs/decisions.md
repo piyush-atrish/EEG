@@ -21,3 +21,13 @@ Short, dated record of design choices that the final report must state explicitl
   and carried across files in time order, with a 60 s warm start. Settings are chosen on
   chb01-chb05 only and frozen before scoring chb06 onwards.
 - **Details:** see docs/adaptive_design.md.
+
+## 2026-11-17 · Treatment of chb06
+
+- **Decision:** chb06 stays in every reported result. The primary comparison is also
+  reported without chb06 as a sensitivity analysis.
+- **Evidence:** within-patient direction agreement 0.376 vs 0.85-0.98 for others; its seizures
+  barely move the strongest consensus features. This is a missing shared signature, not a
+  baseline shift, so it is reported as a failure case of any cross-subject model.
+- **Rule:** no patient is excluded or added after seeing adaptive-filter results.
+- Kalman q/r pilot grid extended to 1e-5, 3e-5, 1e-4, 1e-3, 1e-2 after a synthetic burst test showed only q/r ≤ 1e-4 keeps at least half of a 30 s burst’s power contrast.s
