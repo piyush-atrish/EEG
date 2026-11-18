@@ -1,1 +1,29 @@
-"""Reserved for Milestone 2 (adaptive filtering). Leave empty in Milestone 1."""
+"""Causal, label-free adaptive filtering stage (Milestone 2).
+
+Use :func:`apply_adaptive` from the pipeline; the individual filter classes live in
+``nlms``, ``rls`` and ``kalman_gain``. Design: docs/adaptive_design.md.
+"""
+
+from eegpipe.adaptive.factory import (
+    METHODS,
+    adaptive_dir,
+    apply_adaptive,
+    build_filter,
+    expand_pilot_grid,
+    params_from_config,
+    params_tag,
+    resolve_params,
+    warm_start_from_config,
+)
+
+__all__ = [
+    "METHODS",
+    "adaptive_dir",
+    "apply_adaptive",
+    "build_filter",
+    "expand_pilot_grid",
+    "params_from_config",
+    "params_tag",
+    "resolve_params",
+    "warm_start_from_config",
+]
