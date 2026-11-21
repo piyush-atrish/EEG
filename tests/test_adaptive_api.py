@@ -82,8 +82,10 @@ def test_no_warm_start_when_disabled(data):
 
 def test_params_tag_is_stable_and_distinguishes_settings():
     assert params_tag("nlms") == "nlms_L16_mu0.005"
-    assert params_tag("rls", {"forgetting": 0.9999}) == "rls_L16_lam0.9999"
-    assert params_tag("kalman", {"q_over_r": 1e-4}) == "kalman_qr0.0001_blk1"
+    assert params_tag("rls") == "rls_L8_lam0.9999"
+    assert params_tag("rls", {"forgetting": 0.9995}) == "rls_L8_lam0.9995"
+    assert params_tag("kalman") == "kalman_qr0.0001_blk1"
+    assert params_tag("kalman", {"q_over_r": 1e-3}) == "kalman_qr0.001_blk1"
     assert params_tag("nlms", {"mu": 0.01}) != params_tag("nlms", {"mu": 0.02})
     assert params_tag("rls", {"delta": 5.0}).endswith("_delta5")  # non-identifying but non-default
 
@@ -91,6 +93,20 @@ def test_params_tag_is_stable_and_distinguishes_settings():
 def test_adaptive_dir_sits_next_to_the_preprocessed_arrays(tmp_path):
     cfg = {"paths": {"interim": str(tmp_path)}}
     assert adaptive_dir(cfg, "nlms") == tmp_path / "preprocessed_adaptive" / "nlms_L16_mu0.005"
+
+
+def test_a_non_default_warm_start_gets_its_own_folder(tmp_path):
+    cfg = {"paths": {"interim": str(tmp_path)}}
+    base = tmp_path / "preprocessed_adaptive"
+    assert adaptive_dir(cfg, "nlms", warm_start_s=600) == base / "nlms_L16_mu0.005_ws600"
+    assert adaptive_dir(cfg, "nlms", warm_start_s=60) == base / "nlms_L16_mu0.005"
+    cfg_300 = {"paths": {"interim": str(tmp_path)}, "adaptive": {"warm_start_s": 300}}
+    assert adaptive_dir(cfg_300, "nlms").name == "nlms_L16_mu0.005_ws300"
+
+
+def test_returned_state_records_the_warm_start(data):
+    _, state = apply_adaptive(data[:, : 5 * FS], "nlms", fs=FS, warm_start_s=1.0)
+    assert state["warm_start_s"] == 1.0
 
 
 BLOCK = """
@@ -108,7 +124,7 @@ def test_config_block_selects_method_and_overrides_defaults():
     method, params = params_from_config(cfg)
     assert method == "nlms" and params["length"] == 8 and params["mu"] == 0.005
     assert params_from_config(cfg, "rls")[0] == "rls"
-    assert params_from_config({})[0] == "rls"  # no adaptive block: documented default
+    assert params_from_config({})[0] == "nlms"  # no adaptive block: documented default
     with pytest.raises(ValueError):
         params_from_config({"adaptive": {"method": "lms"}})
     with pytest.raises(ValueError, match="unknown parameter"):

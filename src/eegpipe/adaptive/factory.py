@@ -21,13 +21,14 @@ from eegpipe.adaptive.rls import RLSFilter
 
 METHODS = ("nlms", "rls", "kalman")
 DEFAULT_WARM_START_S = 60.0
-DEFAULT_METHOD = "rls"
+DEFAULT_METHOD = "nlms"
 
-# Placeholders until the pilot (chunk 4.2) selects values on the development patients.
+# Placeholders until the pilot (chunk 4.2) selects values on the development patients. Each passed
+# the synthetic seizure-preservation screen (tools/screen_adaptive.py) on 2026-11-21.
 DEFAULTS: dict[str, dict] = {
     "nlms": {"length": 16, "mu": 0.005, "eps": 1e-6},
-    "rls": {"length": 16, "forgetting": 0.9995, "delta": 1.0, "eps": 1e-6, "cap_factor": 100.0},
-    "kalman": {"block_s": 1.0, "q_over_r": 1e-3, "r": 1.0, "min_rms": 0.1, "max_rms": 1e4},
+    "rls": {"length": 8, "forgetting": 0.9999, "delta": 1.0, "eps": 1e-6, "cap_factor": 100.0},
+    "kalman": {"block_s": 1.0, "q_over_r": 1e-4, "r": 1.0, "min_rms": 0.1, "max_rms": 1e4},
 }
 # parameters that identify a setting in directory names; others appear only when non-default
 _IDENTIFYING = {"nlms": ("length", "mu"), "rls": ("length", "forgetting"), "kalman": ("q_over_r", "block_s")}
@@ -103,9 +104,19 @@ def params_tag(method: str, params: dict | None = None) -> str:
     return "_".join(parts)
 
 
-def adaptive_dir(cfg: dict, method: str, params: dict | None = None) -> Path:
-    """Directory of the adaptive-filtered arrays for one setting, next to the preprocessed ones."""
-    return Path(cfg["paths"]["interim"]) / "preprocessed_adaptive" / params_tag(method, params)
+def adaptive_dir(
+    cfg: dict, method: str, params: dict | None = None, warm_start_s: float | None = None
+) -> Path:
+    """Directory of the adaptive-filtered arrays for one setting, next to the preprocessed ones.
+
+    A warm start other than the default (60 s) is part of the name (``..._ws600``), so outputs made
+    with different warm starts can never be mixed up.
+    """
+    warm = warm_start_from_config(cfg) if warm_start_s is None else float(warm_start_s)
+    tag = params_tag(method, params)
+    if warm != DEFAULT_WARM_START_S:
+        tag += f"_ws{warm:g}"
+    return Path(cfg["paths"]["interim"]) / "preprocessed_adaptive" / tag
 
 
 def build_filter(method: str, n_channels: int, fs: float = 256.0, params: dict | None = None):
@@ -145,4 +156,5 @@ def apply_adaptive(
             raise ValueError("state was produced by a different method or parameter set")
         filt.set_state(state["arrays"])
     y = filt.process(data)
-    return y, {"method": method, "params": resolved, "arrays": filt.get_state()}
+    return y, {"method": method, "params": resolved, "warm_start_s": float(warm_start_s),
+               "arrays": filt.get_state()}
