@@ -53,3 +53,15 @@ Short, dated record of design choices that the final report must state explicitl
   0.9999 shows no first-file transient (ratio 0.008). Recorded as a risk for NLMS.
 - Pilot runs in two stages on chb01-chb05: (A) cheap window features, M1/M2 for all screen
   survivors, no classifier; (B) full features + LOSO for the top 2-3 settings only.
+
+  ## 2026-11-22 · Pilot stage A result and stage B candidates
+
+- Stage A (chb01-05, cheap features): kalman q/r 3e-5 and 1e-4 pass the gate (M1 improved, M2 >=
+  0.9 of raw). NLMS (L16 mu 0.02; L8 mu 0.005) and RLS (L8 lam 0.9999) fail the M2 floor (0.82,
+  0.79, 0.75) but cut patient variance most (M1 ratio 0.61, 0.57, 0.40) and raise direction
+  agreement (0.86, 0.89, 0.97). Whitening filters lose shape features (relative band powers,
+  spectral entropy, Hjorth), not amplitude features.
+- Stage B runs the two passing Kalman settings plus rls_L8_lam0.9999 as a documented waiver of
+  the M2 floor (decided before any classifier result). NLMS is left out of stage B to save time.
+- The M2 floor is a screening heuristic, not a statistical test. The cheap-feature diagnostics
+  cannot rank an adaptive arm against per-patient standardisation; only LOSO results can.

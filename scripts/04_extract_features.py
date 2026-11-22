@@ -4,15 +4,18 @@ Usage
 -----
     python scripts/04_extract_features.py --config configs/config.yaml
     python scripts/04_extract_features.py --patients chb01 chb02 --n-jobs 4
+    python scripts/04_extract_features.py --setting nlms_L16_mu0.005   # features of an adaptive setting
 """
 from __future__ import annotations
 
 import argparse
 import time
+from pathlib import Path
 
 import pandas as pd
 from joblib import Parallel, delayed
 
+from eegpipe.adaptive import adaptive_features_dir, adaptive_root, list_settings
 from eegpipe.config import load_config
 from eegpipe.features.extract import extract_case_features
 from eegpipe.utils.logging_utils import get_logger
@@ -21,8 +24,17 @@ from eegpipe.utils.paths import features_path, file_index_csv, windows_path
 logger = get_logger(__name__)
 
 
-def _process_one_case(case: str, file_index: pd.DataFrame, cfg: dict) -> tuple[str, float, int]:
-    """Extract and write one case's Contract C5 parquet. Runs in its own process."""
+def _process_one_case(
+    case: str,
+    file_index: pd.DataFrame,
+    cfg: dict,
+    array_dir: Path | None = None,
+    out_dir: Path | None = None,
+) -> tuple[str, float, int]:
+    """Extract and write one case's Contract C5 parquet. Runs in its own process.
+
+    ``array_dir``/``out_dir`` redirect the input arrays and the output folder (adaptive settings).
+    """
     win_path = windows_path(cfg, case)
     if not win_path.exists():
         raise FileNotFoundError(
@@ -32,10 +44,10 @@ def _process_one_case(case: str, file_index: pd.DataFrame, cfg: dict) -> tuple[s
     window_table = pd.read_parquet(win_path)
 
     t0 = time.perf_counter()
-    features_df = extract_case_features(case, file_index, window_table, cfg)
+    features_df = extract_case_features(case, file_index, window_table, cfg, array_dir=array_dir)
     elapsed = time.perf_counter() - t0
 
-    out_path = features_path(cfg, case)
+    out_path = features_path(cfg, case) if out_dir is None else out_dir / f"{case}.parquet"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     features_df.to_parquet(out_path, index=False, engine="pyarrow")
 
@@ -49,12 +61,26 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--patients", nargs="*", default=None)
     parser.add_argument(
+        "--setting", type=str, default=None,
+        help="folder name under data/interim/preprocessed_adaptive (printed by 02b_adaptive.py); "
+             "features go to data/processed/features_adaptive/<setting>/",
+    )
+    parser.add_argument(
         "--n-jobs", type=int, default=None, help="Overrides project.n_jobs from config."
     )
     args = parser.parse_args(argv)
 
     cfg = load_config(args.config)
     n_jobs = args.n_jobs if args.n_jobs is not None else cfg["project"].get("n_jobs", -1)
+
+    array_dir = out_dir = None
+    if args.setting:
+        array_dir = adaptive_root(cfg) / args.setting
+        if not array_dir.is_dir():
+            logger.error("No adaptive setting '%s'. Available: %s", args.setting,
+                         ", ".join(list_settings(cfg)) or "(none; run scripts/02b_adaptive.py)")
+            return 1
+        out_dir = adaptive_features_dir(cfg, args.setting)
 
     file_index = pd.read_csv(file_index_csv(cfg))
     included = file_index.loc[file_index["include"].astype(bool)]
@@ -68,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
 
     logger.info("Extracting features for %d case(s) with n_jobs=%s", len(cases), n_jobs)
     results = Parallel(n_jobs=n_jobs)(
-        delayed(_process_one_case)(case, file_index, cfg) for case in cases
+        delayed(_process_one_case)(case, file_index, cfg, array_dir, out_dir) for case in cases
     )
 
     for case, elapsed, n_rows in results:
