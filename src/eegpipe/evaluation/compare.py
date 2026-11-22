@@ -81,3 +81,24 @@ def compare_arms(
                         }
                     )
     return pd.DataFrame(rows)
+
+
+def per_patient_matrix(
+    tables: dict[tuple[str, str], pd.DataFrame],
+    model: str,
+    metric: str = "auc",
+    arms: list[str] | None = None,
+) -> pd.DataFrame:
+    """Patients (rows) x arms (columns) values of ``metric`` for one model, plus a mean row."""
+    columns = {
+        arm: table[metric]
+        for (arm, m), table in sorted(tables.items())
+        if m == model and (arms is None or arm in arms)
+    }
+    if not columns:
+        raise ValueError(f"no per-patient tables for model '{model}' and arms {arms}")
+    if arms:  # keep the order the caller asked for
+        columns = {arm: columns[arm] for arm in arms if arm in columns}
+    matrix = pd.DataFrame(columns)
+    matrix.loc["mean"] = matrix.mean()
+    return matrix
