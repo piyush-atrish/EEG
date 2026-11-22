@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from eegpipe.evaluation.compare import compare_arms, load_per_patient_tables
+from eegpipe.evaluation.compare import compare_arms, load_per_patient_tables, per_patient_matrix
 
 PATIENTS = [f"chb{i:02d}" for i in range(1, 11)]
 DEV = PATIENTS[:5]
@@ -62,3 +62,14 @@ def test_loader_reads_arm_and_model_from_file_names(tmp_path):
     loaded = load_per_patient_tables(tmp_path)
     assert set(loaded) == set(make_tables())
     assert list(loaded[("subject_standardised", "rf")].index) == PATIENTS
+
+
+def test_per_patient_matrix_orders_arms_and_adds_the_mean():
+    tables = make_tables(0.1)
+    matrix = per_patient_matrix(tables, "rf", "auc", arms=["subject_standardised", "raw"])
+    assert list(matrix.columns) == ["subject_standardised", "raw"]
+    assert list(matrix.index) == [*PATIENTS, "mean"]
+    assert matrix.loc["mean", "subject_standardised"] == pytest.approx(matrix.loc["mean", "raw"] + 0.1)
+    assert list(per_patient_matrix(tables, "svm", "auc").columns) == ["raw", "subject_standardised"]
+    with pytest.raises(ValueError):
+        per_patient_matrix(tables, "knn")

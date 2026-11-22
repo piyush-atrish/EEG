@@ -104,6 +104,22 @@ def params_tag(method: str, params: dict | None = None) -> str:
     return "_".join(parts)
 
 
+def adaptive_root(cfg: dict) -> Path:
+    """Folder holding one sub-folder of filtered arrays per setting."""
+    return Path(cfg["paths"]["interim"]) / "preprocessed_adaptive"
+
+
+def adaptive_features_dir(cfg: dict, setting: str) -> Path:
+    """Folder of the feature tables computed from one setting's filtered arrays."""
+    return Path(cfg["paths"]["features"]).parent / "features_adaptive" / setting
+
+
+def list_settings(cfg: dict) -> list[str]:
+    """Names of the settings that have a folder of filtered arrays."""
+    root = adaptive_root(cfg)
+    return sorted(p.name for p in root.iterdir() if p.is_dir()) if root.exists() else []
+
+
 def adaptive_dir(
     cfg: dict, method: str, params: dict | None = None, warm_start_s: float | None = None
 ) -> Path:
@@ -116,7 +132,7 @@ def adaptive_dir(
     tag = params_tag(method, params)
     if warm != DEFAULT_WARM_START_S:
         tag += f"_ws{warm:g}"
-    return Path(cfg["paths"]["interim"]) / "preprocessed_adaptive" / tag
+    return adaptive_root(cfg) / tag
 
 
 def build_filter(method: str, n_channels: int, fs: float = 256.0, params: dict | None = None):

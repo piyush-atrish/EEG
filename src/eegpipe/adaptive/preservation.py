@@ -95,6 +95,19 @@ def _window_features(x: np.ndarray, fs: float) -> np.ndarray:
     return np.stack(columns, axis=1)
 
 
+FEATURE_NAMES = (
+    ["logvar", "linelength"]
+    + [f"logpow_{band}" for band in BANDS]
+    + [f"relpow_{band}" for band in BANDS]
+    + ["specentropy", "mobility", "complexity"]
+)  # the 15 columns returned by window_features, in order
+
+
+def window_features(x: np.ndarray, fs: float) -> np.ndarray:
+    """15 cheap features per window for ``x`` shaped (n_windows, n_samples); see FEATURE_NAMES."""
+    return _window_features(x, fs)
+
+
 def _auc_rows(features: np.ndarray, labels: np.ndarray) -> np.ndarray:
     n_pos = int(labels.sum())
     n_neg = len(labels) - n_pos

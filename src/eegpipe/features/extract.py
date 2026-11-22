@@ -11,6 +11,7 @@ non-finite replacement, counting, and logging live there and nowhere else.
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -133,6 +134,7 @@ def extract_case_features(
     window_table: pd.DataFrame,
     cfg: dict,
     batch_size: int = 256,
+    array_dir: str | Path | None = None,
 ) -> pd.DataFrame:
     """Build Contract C5 for one case: C4 columns plus every feature column.
 
@@ -156,6 +158,9 @@ def extract_case_features(
         Full config.
     batch_size : int, default 256
         Windows per `extract_batch_features` call.
+    array_dir : path, optional
+        Folder holding `<case>/<file_stem>.npy` arrays to read instead of the preprocessed
+        cache (e.g. the output of one adaptive-filter setting). Default: the preprocessed cache.
 
     Returns
     -------
@@ -186,7 +191,11 @@ def extract_case_features(
             continue
 
         file_stem_value = file_stem(file)
-        arr = np.load(preprocessed_path(cfg, case, file_stem_value), mmap_mode="r")
+        if array_dir is None:
+            array_path = preprocessed_path(cfg, case, file_stem_value)
+        else:
+            array_path = Path(array_dir) / case / f"{file_stem_value}.npy"
+        arr = np.load(array_path, mmap_mode="r")
         starts = file_windows["start_sample"].to_numpy()
 
         for batch_start in range(0, len(starts), batch_size):

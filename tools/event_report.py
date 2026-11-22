@@ -6,6 +6,7 @@ and writes seizure-level tables.
 Usage (from the repo root):
     python tools/event_report.py
     python tools/event_report.py --min-consecutive 2 --refractory-s 60 --tag mc2_ref60
+    python tools/event_report.py --arms raw_dev5 adaptive_kalman_qr3e-05_blk1_dev5
 
 Outputs (in results/tables/): event_per_patient[_TAG].csv, event_seizures[_TAG].csv.
 """
@@ -28,6 +29,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--merge-gap-s", type=float, default=None)
     parser.add_argument("--refractory-s", type=float, default=0.0)
     parser.add_argument("--tag", type=str, default="", help="suffix for the output file names")
+    parser.add_argument("--arms", nargs="+", default=None, help="only these arms (default: every arm found)")
     args = parser.parse_args(argv)
 
     cfg = load_config(args.config)
@@ -35,6 +37,11 @@ def main(argv: list[str] | None = None) -> int:
     if not files:
         raise SystemExit("No prediction files found. Run scripts/05_run_baseline.py first.")
     predictions = pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
+    if args.arms:
+        found = sorted(predictions["arm"].unique())
+        predictions = predictions[predictions["arm"].isin(args.arms)]
+        if predictions.empty:
+            raise SystemExit(f"None of {args.arms} found. Arms in the predictions: {found}")
 
     window_s = float(cfg["segmentation"]["window_s"])
     step_s = window_s * (1.0 - float(cfg["segmentation"]["overlap"]))
