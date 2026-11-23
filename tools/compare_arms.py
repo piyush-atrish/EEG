@@ -3,6 +3,7 @@
 Usage (from the repo root):
     python tools/compare_arms.py                       # reference arm: raw
     python tools/compare_arms.py --reference subject_standardised
+    python tools/compare_arms.py --exclude chb06        # sensitivity analysis without one patient
 
 For every model, each other arm is compared with the reference arm over the patients in
 results/tables/per_patient_<arm>__<model>.csv. Reported for all patients, for the development
@@ -25,6 +26,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--config", type=str, default=None)
     parser.add_argument("--reference", type=str, default="raw")
+    parser.add_argument("--exclude", nargs="+", default=[],
+                        help="patients left out of every comparison (sensitivity analysis, e.g. chb06)")
     parser.add_argument("--arms", nargs="+", default=None,
                         help="compare only these arms with the reference (default: every arm found); "
                              "use it to keep runs on different patient sets apart")
@@ -43,6 +46,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.arms:
         keep = set(args.arms) | {args.reference}
         tables = {key: table for key, table in tables.items() if key[0] in keep}
+    if args.exclude:
+        tables = {key: table.drop(index=args.exclude, errors="ignore") for key, table in tables.items()}
+        print(f"Excluding patients: {', '.join(args.exclude)}")
     result = compare_arms(tables, args.reference, args.dev)
     out = table_dir / "arm_comparison.csv"
     result.to_csv(out, index=False)

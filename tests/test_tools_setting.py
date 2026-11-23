@@ -71,3 +71,20 @@ def test_event_report_arm_filter(tmp_cfg, tmp_path, write_cfg, capsys):
     assert "arm_a" in out and "arm_b" not in out
     with pytest.raises(SystemExit, match="None of"):
         tool.main(["--config", str(cfg_path), "--arms", "nope"])
+
+
+def test_compare_arms_can_exclude_patients(tmp_cfg, tmp_path, write_cfg):
+    cfg = copy.deepcopy(tmp_cfg)
+    tables = Path(cfg["paths"]["tables"])
+    tables.mkdir(parents=True, exist_ok=True)
+    patients = [f"chb{i:02d}" for i in range(1, 6)]
+    base = np.linspace(0.6, 0.9, 5)
+    for arm, shift in (("ref", 0.0), ("other", 0.1)):
+        pd.DataFrame({"patient": patients, "auc": base + shift, "sensitivity": 0.5,
+                      "specificity": 0.9, "fa_per_hour": 10.0}).to_csv(
+            tables / f"per_patient_{arm}__rf.csv", index=False)
+    cfg_path = write_cfg(cfg, tmp_path / "cfg.yaml")
+    tool = load_tool("compare_arms")
+    assert tool.main(["--config", str(cfg_path), "--reference", "ref", "--exclude", "chb03"]) == 0
+    result = pd.read_csv(tables / "arm_comparison.csv")
+    assert set(result.loc[result["subset"] == "all", "n_patients"]) == {4}
