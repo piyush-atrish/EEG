@@ -80,3 +80,19 @@ Short, dated record of design choices that the final report must state explicitl
   change the frozen choice.
 - Controls before trusting the result: label-shuffle check on the Kalman features;
   event-level report.
+
+  ## 2026-11-23 · Primary evaluation result (chb06-chb10), frozen kalman q/r 3e-5
+
+- Primary endpoint (window AUC, Kalman vs subject_standardised, chb06-10): RF 0.867 vs 0.860
+  (+0.007, 95% CI -0.033 to 0.070, Kalman better on 2/5); SVM 0.809 vs 0.763 (+0.047,
+  CI -0.111 to 0.204, 2/5). No evidence of a difference.
+- Without chb06 (4 patients): RF 0.939 vs 0.962 (-0.023, CI -0.036 to -0.006, Kalman better
+  on 1/4); SVM 0.878 vs 0.884.
+- The development advantage (chb01-05) did not replicate: expected selection effect.
+- Event level (59 seizures): Kalman RF 48 detected / 20.9 FA/h; standardised RF 46 / 23.9;
+  raw RF 49 / 36.1; Kalman SVM 53 / 57.6; standardised SVM 48 / 39.9; raw SVM 53 / 80.8.
+- Report as: Kalman beats raw on dev patients and lowers false alarms vs raw, but does not
+  beat per-patient standardisation on unseen patients. NLMS/RLS gave no gain. chb06 remains a
+  failure case for every arm.
+- chb01-chb10 are now all seen. Any further design change must be judged on patients not yet
+  used (chb11 onwards).
