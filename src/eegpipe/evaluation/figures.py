@@ -13,10 +13,10 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib.lines import Line2D  # noqa: E402
-from matplotlib.ticker import MaxNLocator  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
+from matplotlib.lines import Line2D  # noqa: E402
+from matplotlib.ticker import MaxNLocator  # noqa: E402
 
 from eegpipe.evaluation.compare import per_patient_matrix  # noqa: E402
 
