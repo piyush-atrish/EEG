@@ -24,7 +24,7 @@ from eegpipe.utils.logging_utils import get_logger
 DEV_ARMS = ["raw_dev5", "subject_standardised_dev5", "adaptive_kalman_qr3e-05_blk1_dev5",
             "adaptive_rls_L8_lam0.9999_dev5"]
 EVAL_ARMS = ["raw", "subject_standardised", "adaptive_kalman_qr3e-05_blk1",
-             "adaptive_kalman_qr3e-05_blk1_standardised"]
+             "adaptive_rls_L8_lam0.9999", "adaptive_nlms_L8_mu0.005"]  # arms without results are skipped
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -5,6 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from eegpipe.evaluation import figures as fg
 
@@ -49,6 +50,42 @@ def test_screen_and_convergence_figures(tmp_path):
          "rms_in": 40.0, "rms_out": 40.0 * (0.1 / (n + 1) + 0.02)}
         for s in ("nlms_a", "rls_a") for c in ("chb01", "chb21") for n in range(1, 5)])
     assert_png(fg.fig_convergence(status, tmp_path / "conv.png"))
+
+
+def test_label_placement_avoids_overlaps():
+    import matplotlib.pyplot as plt
+
+    xs = np.array([0.90, 0.905, 0.91, 0.5])
+    ys = np.array([0.30, 0.302, 0.304, 0.1])
+    fig, ax = plt.subplots(figsize=(5, 4))
+    ax.scatter(xs, ys)
+    fg.place_labels(ax, xs, ys, ["aa", "bb", "cc", "dd"])
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    boxes = [t.get_window_extent(renderer) for t in ax.texts]
+    for i in range(len(boxes)):
+        for j in range(i + 1, len(boxes)):
+            assert not boxes[i].overlaps(boxes[j]), f"labels {i} and {j} overlap"
+    plt.close(fig)
+
+
+def test_convergence_draws_only_settings_available_for_every_case():
+    rows = []
+    for setting, cases in (("a", ("chb01", "chb02")), ("b", ("chb01", "chb02")), ("only_chb01", ("chb01",))):
+        for case in cases:
+            rows.append({"setting": setting, "case": case, "file": f"{case}_01.edf", "status": "success",
+                         "rms_in": 1.0, "rms_out": 0.1})
+    status = pd.DataFrame(rows)
+    assert fg.convergence_settings(status, ["chb01", "chb02"]) == ["a", "b"]  # the chb01-only line is dropped
+    assert fg.convergence_settings(status, ["chb01"]) == ["a", "b", "only_chb01"]
+    assert fg.convergence_settings(status, ["chb01", "chb02"], settings=["b", "zzz"]) == ["b"]
+
+
+def test_standardised_adaptive_variants_are_recognised():
+    assert fg.is_standardised_variant("adaptive_kalman_qr3e-05_blk1_standardised")
+    assert fg.is_standardised_variant("adaptive_kalman_qr3e-05_blk1_standardised_dev5")
+    assert not fg.is_standardised_variant("adaptive_kalman_qr3e-05_blk1")
+    assert not fg.is_standardised_variant("subject_standardised")  # a baseline arm, not an adaptive one
 
 
 def test_stage_a_figure_with_and_without_the_feature_table(tmp_path):
