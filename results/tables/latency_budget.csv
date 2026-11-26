@@ -1,0 +1,7 @@
+component,seconds,note
+Window length (decision needs the whole window),4.0,4 s windows
+Extra windows before alarm (min_consecutive=3),4.0,hop 2 s; the frozen setting needs 3 consecutive positive windows
+Kalman estimate lag (not an output delay),0.0,the gain estimate uses blocks before the current one; output samples are not delayed
+"Structural minimum, as evaluated (offline, zero-phase preprocessing)",8.0,plus feature and classifier time; the measured median event latency is higher
+Causal FIR band-pass group delay (needed only if deployed),1.81640625,"931 taps, linear phase; the offline code removes this delay with a centred filter"
+"Structural minimum, if deployed with a causal FIR",9.81640625,the notch would add a few samples more; not counted

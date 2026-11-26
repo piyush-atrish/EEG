@@ -135,107 +135,14 @@ evaluation:
     svm: {C: 1, gamma: scale}
     rf: {n_estimators: 200, max_depth: null, min_samples_leaf: 1}
 # ---------------------------------------------------------------------------
-# Adaptive filtering stage (Milestone 2). Values below are placeholders until the pilot on the
-# development patients (chb01-chb05) selects and freezes them; see docs/adaptive_design.md.
+# Adaptive filtering stage (Milestone 2). One block only (duplicate keys would be silently
+# overridden by the last one). The primary method is FROZEN (docs/decisions.md, 2026-11-23):
+# Kalman gain tracker, block 1 s, q/r 3e-5, r 1, warm start 60 s, state per case.
+# The nlms and rls defaults each passed the synthetic seizure-preservation screen
+# (tools/screen_adaptive.py) and were run for completeness only.
 # ---------------------------------------------------------------------------
 adaptive:
-  method: rls            # used by scripts/02b_adaptive.py unless --method is given
-  warm_start_s: 60.0     # first seconds of a case used to converge the filter before output starts
-  nlms:
-    length: 16
-    mu: 0.005
-    eps: 1.0e-6
-  rls:
-    length: 16
-    forgetting: 0.9995
-    delta: 1.0
-    eps: 1.0e-6
-    cap_factor: 100.0
-  kalman:
-    block_s: 1.0
-    q_over_r: 1.0e-3
-    r: 1.0
-    min_rms: 0.1
-    max_rms: 10000.0
-  pilot_grid:            # screened on the development patients only
-    nlms:
-      length: [8, 16, 32]
-      mu: [0.001, 0.005, 0.02]
-    rls:
-      length: [8, 16]
-      forgetting: [0.999, 0.9995, 0.9999]
-    kalman:
-      q_over_r: [1.0e-5, 3.0e-5, 1.0e-4, 1.0e-3, 1.0e-2]# ---------------------------------------------------------------------------
-# Adaptive filtering stage (Milestone 2). Values below are placeholders until the pilot on the
-# development patients (chb01-chb05) selects and freezes them; see docs/adaptive_design.md.
-# ---------------------------------------------------------------------------
-adaptive:
-  method: rls            # used by scripts/02b_adaptive.py unless --method is given
-  warm_start_s: 60.0     # first seconds of a case used to converge the filter before output starts
-  nlms:
-    length: 16
-    mu: 0.005
-    eps: 1.0e-6
-  rls:
-    length: 16
-    forgetting: 0.9995
-    delta: 1.0
-    eps: 1.0e-6
-    cap_factor: 100.0
-  kalman:
-    block_s: 1.0
-    q_over_r: 1.0e-3
-    r: 1.0
-    min_rms: 0.1
-    max_rms: 10000.0
-  pilot_grid:            # screened on the development patients only
-    nlms:
-      length: [8, 16, 32]
-      mu: [0.001, 0.005, 0.02]
-    rls:
-      length: [8, 16]
-      forgetting: [0.999, 0.9995, 0.9999]
-    kalman:
-      q_over_r: [1.0e-5, 3.0e-5, 1.0e-4, 1.0e-3, 1.0e-2]
-# ---------------------------------------------------------------------------
-# Adaptive filtering stage (Milestone 2). Values below are placeholders until the pilot on the
-# development patients (chb01-chb05) selects and freezes them; see docs/adaptive_design.md.
-# ---------------------------------------------------------------------------
-adaptive:
-  method: rls            # used by scripts/02b_adaptive.py unless --method is given
-  warm_start_s: 60.0     # first seconds of a case used to converge the filter before output starts
-  nlms:
-    length: 16
-    mu: 0.005
-    eps: 1.0e-6
-  rls:
-    length: 16
-    forgetting: 0.9995
-    delta: 1.0
-    eps: 1.0e-6
-    cap_factor: 100.0
-  kalman:
-    block_s: 1.0
-    q_over_r: 1.0e-3
-    r: 1.0
-    min_rms: 0.1
-    max_rms: 10000.0
-  pilot_grid:            # screened on the development patients only
-    nlms:
-      length: [8, 16, 32]
-      mu: [0.001, 0.005, 0.02]
-    rls:
-      length: [8, 16]
-      forgetting: [0.999, 0.9995, 0.9999]
-    kalman:
-      q_over_r: [1.0e-5, 3.0e-5, 1.0e-4, 1.0e-3, 1.0e-2]
-# ---------------------------------------------------------------------------
-# Adaptive filtering stage (Milestone 2). Values below are placeholders until the pilot on the
-# development patients (chb01-chb05) selects and freezes them; see docs/adaptive_design.md.
-# The defaults each passed the synthetic seizure-preservation screen (tools/screen_adaptive.py).
-# ---------------------------------------------------------------------------
-adaptive:
-  method: nlms           # used by scripts/02b_adaptive.py unless --method is given
+  method: kalman         # used by scripts/02b_adaptive.py unless --method is given
   warm_start_s: 60.0     # first seconds of a case used to converge the filter before output starts
   nlms:
     length: 16
@@ -249,7 +156,7 @@ adaptive:
     cap_factor: 100.0
   kalman:
     block_s: 1.0
-    q_over_r: 1.0e-4
+    q_over_r: 3.0e-5     # frozen primary setting
     r: 1.0
     min_rms: 0.1
     max_rms: 10000.0

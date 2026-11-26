@@ -1,0 +1,8 @@
+stage,mul_per_sample,add_per_sample,div_per_sample,exp_log_per_sample,ops_per_sample_as_implemented,ops_per_sample_minimal,div_per_sample_minimal,mops_per_s_18ch_as_implemented,mops_per_s_18ch_minimal,state_bytes_per_channel_f64,state_bytes_18ch_f32,measured_us_per_sample,x_real_time_1core
+Kalman gain tracker (frozen primary),2.01,2.02,0.008,1.004,5.0,4.1,0.008,0.023,0.019,40,360,0.0267,8116.0
+NLMS L=8,25.0,26.0,1.0,0.0,52.0,40.0,1.0,0.24,0.184,128,1152,0.0669,3243.0
+NLMS L=16,49.0,50.0,1.0,0.0,100.0,72.0,1.0,0.461,0.332,256,2304,0.0884,2454.0
+RLS L=8,132.0,133.0,80.0,0.0,345.0,345.0,2.0,1.59,1.59,640,5760,0.4973,436.0
+RLS L=16,456.0,457.0,288.0,0.0,1201.0,1201.0,2.0,5.534,5.534,2304,20736,1.5369,141.0
+"Preprocessing: Kaiser FIR band-pass, 931 taps",931.0,930.0,0.0,0.0,1861.0,1396.0,0.0,8.575,6.433,7440,66960,,
+Preprocessing: 60 Hz notch (biquad),5.0,4.0,0.0,0.0,9.0,9.0,0.0,0.041,0.041,32,288,,
